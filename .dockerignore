@@ -1,0 +1,38 @@
+# Ignore heavy folders to keep Docker build context under 2 MB
+node_modules
+*/node_modules
+*/*/node_modules
+
+# Ignore local builds
+dist
+*/dist
+*/*/dist
+build
+*/build
+
+# Ignore git & repository metadata
+.git
+.github
+.gitignore
+.dockerignore
+
+# Ignore test suites and reports
+coverage
+test-results
+playwright-report
+blob-report
+playwright/.cache
+e2e
+load-tests
+security
+docs/screenshots
+
+# Ignore local configs and secrets
+.env
+.env.*
+*.log
+npm-debug.log*
+
+# Ignore docs
+README.md
+docs/MANUAL_TEST_CASES.md

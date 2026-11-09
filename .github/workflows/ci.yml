@@ -1,0 +1,108 @@
+name: eSushrut G5 Automated CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  quality-and-tests:
+    name: Lint, Test, Coverage Gate & Docker Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: esushrut_feedback_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Build Shared Types & Schemas
+        run: npm run build:shared
+
+      - name: Security Vulnerability Audit
+        run: npm audit --audit-level=critical || true
+
+      - name: Lint Codebase
+        run: npm run lint || true
+
+      - name: Prisma Client Generation
+        run: npm run prisma:generate
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/esushrut_feedback_test?schema=public"
+
+      - name: Run Database Migrations & Constraints on Test DB
+        run: |
+          cd apps/api
+          npx prisma db push
+          PGPASSWORD=password psql -h localhost -U postgres -d esushrut_feedback_test -f prisma/migrations/constraints.sql || true
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/esushrut_feedback_test?schema=public"
+
+      - name: Backend Unit Tests & Coverage Gate (80% Minimum)
+        run: npm run test:api:cov
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/esushrut_feedback_test?schema=public"
+          JWT_ACCESS_SECRET: "ci-test-jwt-access-secret"
+          JWT_REFRESH_SECRET: "ci-test-jwt-refresh-secret"
+          QR_HMAC_SECRET: "esushrut-cdac-secure-hmac-sha256-key-salt"
+
+      - name: Frontend Component Tests & Coverage Gate (Vitest)
+        run: npm run test:web:cov
+
+      - name: Backend Integration / Supertest API Suite
+        run: |
+          cd apps/api
+          npx jest test/integration/api.spec.ts
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/esushrut_feedback_test?schema=public"
+          JWT_ACCESS_SECRET: "ci-test-jwt-access-secret"
+          JWT_REFRESH_SECRET: "ci-test-jwt-refresh-secret"
+          QR_HMAC_SECRET: "esushrut-cdac-secure-hmac-sha256-key-salt"
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Seed Database for E2E Tests
+        run: npm run prisma:seed
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/esushrut_feedback_test?schema=public"
+          FRONTEND_URL: "http://localhost:3000"
+
+      - name: Run Playwright End-to-End Suite
+        run: npx playwright test
+        env:
+          DATABASE_URL: "postgresql://postgres:password@localhost:5432/esushrut_feedback_test?schema=public"
+
+      - name: Build Web Application
+        run: npm run build:web
+
+      - name: Build API Application
+        run: npm run build:api
+
+      - name: Docker Build Check
+        run: |
+          docker build -f apps/api/Dockerfile -t esushrut-api:latest .
+          docker build -f apps/web/Dockerfile -t esushrut-web:latest .

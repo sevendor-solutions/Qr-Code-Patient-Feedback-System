@@ -1,0 +1,39 @@
+{
+  "name": "esushrut-feedback-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-ready QR Code Patient Feedback & Query System module for eSushrut G5 hospital management system",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@esushrut/shared && npm run build --workspace=@esushrut/api && npm run build --workspace=@esushrut/web",
+    "build:shared": "npm run build --workspace=@esushrut/shared",
+    "build:api": "npm run build --workspace=@esushrut/api",
+    "build:web": "npm run build --workspace=@esushrut/web",
+    "dev:api": "npm run start:dev --workspace=@esushrut/api",
+    "dev:web": "npm run dev --workspace=@esushrut/web",
+    "dev": "concurrently -n \"API,WEB\" -c \"blue,green\" \"npm run dev:api\" \"npm run dev:web\"",
+    "test": "npm run test --workspace=@esushrut/api && npm run test --workspace=@esushrut/web",
+    "test:api": "npm run test --workspace=@esushrut/api",
+    "test:api:cov": "npm run test:cov --workspace=@esushrut/api",
+    "test:web": "npm run test --workspace=@esushrut/web",
+    "test:web:cov": "npm run test:cov --workspace=@esushrut/web",
+    "test:e2e": "playwright test",
+    "test:load": "k6 run load-tests/feedback-load-test.js",
+    "prisma:generate": "npm run prisma:generate --workspace=@esushrut/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@esushrut/api",
+    "prisma:seed": "npm run prisma:seed --workspace=@esushrut/api",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.42.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.0"
+  }
+}

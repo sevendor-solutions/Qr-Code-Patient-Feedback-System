@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL 15 Lightweight Alpine Database (~80 MB image)
+  postgres:
+    image: postgres:15-alpine
+    container_name: esushrut_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-esushrut_pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-esushrut_feedback}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-esushrut_feedback}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. NestJS 10 API (~140 MB image, pruned production node_modules)
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: esushrut_api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-esushrut_pass_2026}@postgres:5432/${POSTGRES_DB:-esushrut_feedback}?schema=public"
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-esushrut-g5-jwt-access-secret-cdac-key-2026}
+      JWT_ACCESS_EXPIRATION: "3600s"
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-esushrut-g5-jwt-refresh-secret-cdac-key-2026}
+      JWT_REFRESH_EXPIRATION: "7d"
+      QR_HMAC_SECRET: ${QR_HMAC_SECRET:-esushrut-cdac-secure-hmac-sha256-key-salt}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      API_BASE_URL: ${API_BASE_URL:-http://localhost/api}
+      UPLOAD_DIR: "./uploads"
+      MAX_FILE_SIZE_BYTES: 5242880
+      THROTTLE_TTL: 60
+      THROTTLE_LIMIT: 60
+      DAILY_SUBMISSION_LIMIT_PER_MOBILE: 3
+    volumes:
+      - uploads_data:/app/apps/api/uploads
+
+  # 3. React 18 Frontend + Nginx Proxy (~24 MB image)
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: esushrut_web
+    restart: always
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-80}:80"
+
+volumes:
+  postgres_data:
+  uploads_data:

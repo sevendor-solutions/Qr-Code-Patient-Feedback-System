@@ -1,0 +1,359 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  DEPT_HEAD
+  FEEDBACK_OFFICER
+}
+
+enum PatientType {
+  OPD
+  IPD
+  EMERGENCY
+  ATTENDANT
+  VISITOR
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  ESCALATED
+  CLOSED
+}
+
+enum ComplaintPriority {
+  NORMAL
+  URGENT
+}
+
+enum RatingCategory {
+  REGISTRATION
+  WAITING_TIME
+  DOCTOR
+  NURSING
+  CLEANLINESS
+  LAB
+  PHARMACY
+  BILLING
+  STAFF_BEHAVIOUR
+}
+
+model Hospital {
+  id           String   @id @default(uuid()) @db.Uuid
+  code         String   @unique @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  address      String?  @db.Text
+  contactEmail String?  @db.VarChar(150)
+  contactPhone String?  @db.VarChar(50)
+  logoUrl      String?  @db.VarChar(500)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?  @db.VarChar(100)
+
+  departments  Department[]
+  locations    QrLocation[]
+  qrMasters    QrMaster[]
+  feedbacks    Feedback[]
+  complaints   ComplaintTicket[]
+  users        User[]
+
+  @@map("hospitals")
+}
+
+model Department {
+  id           String   @id @default(uuid()) @db.Uuid
+  hospitalId   String   @db.Uuid
+  code         String   @db.VarChar(50)
+  name         String   @db.VarChar(255)
+  headName     String?  @db.VarChar(150)
+  headEmail    String?  @db.VarChar(150)
+  headPhone    String?  @db.VarChar(50)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?  @db.VarChar(100)
+
+  hospital          Hospital           @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  locations         QrLocation[]
+  qrMasters         QrMaster[]
+  feedbacks         Feedback[]
+  complaints        ComplaintTicket[]
+  escalationMatrices EscalationMatrix[]
+  users             User[]
+
+  @@unique([hospitalId, code])
+  @@index([hospitalId])
+  @@map("departments")
+}
+
+model QrLocation {
+  id           String   @id @default(uuid()) @db.Uuid
+  hospitalId   String   @db.Uuid
+  departmentId String   @db.Uuid
+  name         String   @db.VarChar(150)
+  floor        String?  @db.VarChar(50)
+  ward         String?  @db.VarChar(100)
+  counter      String?  @db.VarChar(100)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?  @db.VarChar(100)
+
+  hospital   Hospital   @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  qrMasters  QrMaster[]
+  feedbacks  Feedback[]
+  complaints ComplaintTicket[]
+
+  @@index([hospitalId])
+  @@index([departmentId])
+  @@map("qr_locations")
+}
+
+model QrMaster {
+  id           String   @id @default(uuid()) @db.Uuid
+  hospitalId   String   @db.Uuid
+  departmentId String   @db.Uuid
+  locationId   String?  @db.Uuid
+  code         String   @unique @db.VarChar(100)
+  token        String   @db.VarChar(255)
+  targetUrl    String   @db.Text
+  scanCount    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?  @db.VarChar(100)
+
+  hospital   Hospital    @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  department Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  location   QrLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  feedbacks  Feedback[]
+  complaints ComplaintTicket[]
+
+  @@index([hospitalId])
+  @@index([departmentId])
+  @@index([token])
+  @@map("qr_masters")
+}
+
+model ServiceCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique @db.VarChar(50)
+  nameEn      String   @db.VarChar(150)
+  nameTe      String   @db.VarChar(150)
+  nameHi      String   @db.VarChar(150)
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?  @db.VarChar(100)
+
+  complaints ComplaintTicket[]
+
+  @@map("service_categories")
+}
+
+model Question {
+  id           String         @id @default(uuid()) @db.Uuid
+  category     RatingCategory
+  questionEn   String         @db.VarChar(255)
+  questionTe   String         @db.VarChar(255)
+  questionHi   String         @db.VarChar(255)
+  displayOrder Int            @default(0)
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  createdBy    String?        @db.VarChar(100)
+
+  @@index([category])
+  @@map("questions")
+}
+
+model Feedback {
+  id           String      @id @default(uuid()) @db.Uuid
+  hospitalId   String      @db.Uuid
+  departmentId String      @db.Uuid
+  locationId   String?     @db.Uuid
+  qrMasterId   String?     @db.Uuid
+  language     String      @default("en") @db.VarChar(10)
+  patientName  String?     @db.VarChar(150)
+  mobile       String      @db.VarChar(20)
+  crNumber     String?     @db.VarChar(50)
+  patientType  PatientType
+  overallEmoji Int         // 1 to 5
+  npsScore     Int         // 0 to 10
+  comments     String?     @db.Text
+  ipHash       String?     @db.VarChar(100)
+  userAgent    String?     @db.VarChar(500)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  createdBy    String?     @db.VarChar(100)
+
+  hospital   Hospital         @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  department Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  location   QrLocation?      @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  qrMaster   QrMaster?        @relation(fields: [qrMasterId], references: [id], onDelete: SetNull)
+  ratings    FeedbackRating[]
+
+  @@index([departmentId])
+  @@index([createdAt])
+  @@index([mobile])
+  @@map("feedbacks")
+}
+
+model FeedbackRating {
+  id         String         @id @default(uuid()) @db.Uuid
+  feedbackId String         @db.Uuid
+  category   RatingCategory
+  rating     Int            // 1 to 5
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  createdBy  String?        @db.VarChar(100)
+
+  feedback Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  @@unique([feedbackId, category])
+  @@index([category])
+  @@map("feedback_ratings")
+}
+
+model ComplaintTicket {
+  id                     String            @id @default(uuid()) @db.Uuid
+  ticketId               String            @unique @db.VarChar(50) // FB-YYYY-NNNNNN
+  hospitalId             String            @db.Uuid
+  departmentId           String            @db.Uuid
+  locationId             String?           @db.Uuid
+  qrMasterId             String?           @db.Uuid
+  categoryId             String            @db.Uuid
+  language               String            @default("en") @db.VarChar(10)
+  patientName            String?           @db.VarChar(150)
+  mobile                 String            @db.VarChar(20)
+  crNumber               String?           @db.VarChar(50)
+  patientType            PatientType
+  description            String            @db.Text
+  photoUrl               String?           @db.VarChar(500)
+  priority               ComplaintPriority @default(NORMAL)
+  status                 ComplaintStatus   @default(OPEN)
+  assignedToId           String?           @db.Uuid
+  currentEscalationLevel Int               @default(1)
+  escalatedAt            DateTime?
+  resolvedAt             DateTime?
+  closedAt               DateTime?
+  slaDeadline            DateTime?
+  ipHash                 String?           @db.VarChar(100)
+  userAgent              String?           @db.VarChar(500)
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  createdBy              String?           @db.VarChar(100)
+
+  hospital   Hospital           @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  department Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  location   QrLocation?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  qrMaster   QrMaster?          @relation(fields: [qrMasterId], references: [id], onDelete: SetNull)
+  category   ServiceCategory    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  assignedTo User?              @relation("AssignedComplaints", fields: [assignedToId], references: [id], onDelete: SetNull)
+  histories  ComplaintHistory[]
+
+  @@index([departmentId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([mobile])
+  @@map("complaint_tickets")
+}
+
+model ComplaintHistory {
+  id             String           @id @default(uuid()) @db.Uuid
+  ticketId       String           @db.Uuid
+  fromStatus     ComplaintStatus?
+  toStatus       ComplaintStatus
+  actionByUserId String?          @db.Uuid
+  actionRemarks  String           @db.Text
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  createdBy      String?          @db.VarChar(100)
+
+  ticket       ComplaintTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actionByUser User?           @relation(fields: [actionByUserId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId])
+  @@map("complaint_histories")
+}
+
+model EscalationMatrix {
+  id               String   @id @default(uuid()) @db.Uuid
+  departmentId     String   @db.Uuid
+  level            Int      // 1 to 5
+  slaHours         Int      // e.g., 24, 48
+  escalateToUserId String   @db.Uuid
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  createdBy        String?  @db.VarChar(100)
+
+  department     Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  escalateToUser User       @relation(fields: [escalateToUserId], references: [id], onDelete: Restrict)
+
+  @@unique([departmentId, level])
+  @@index([departmentId])
+  @@map("escalation_matrices")
+}
+
+model User {
+  id               String    @id @default(uuid()) @db.Uuid
+  username         String    @unique @db.VarChar(100)
+  passwordHash     String    @db.VarChar(255)
+  email            String    @unique @db.VarChar(150)
+  fullName         String    @db.VarChar(150)
+  mobile           String?   @db.VarChar(20)
+  role             UserRole  @default(FEEDBACK_OFFICER)
+  hospitalId       String?   @db.Uuid
+  departmentId     String?   @db.Uuid
+  isActive         Boolean   @default(true)
+  refreshTokenHash String?   @db.VarChar(255)
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  createdBy        String?   @db.VarChar(100)
+
+  hospital          Hospital?          @relation(fields: [hospitalId], references: [id], onDelete: SetNull)
+  department        Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  assignedComplaints ComplaintTicket[] @relation("AssignedComplaints")
+  complaintHistories ComplaintHistory[]
+  escalationEntries EscalationMatrix[]
+  auditLogs         AuditLog[]
+
+  @@index([username])
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @db.Uuid
+  action     String   @db.VarChar(100)
+  entityName String   @db.VarChar(100)
+  entityId   String?  @db.VarChar(100)
+  details    String?  @db.Text
+  ipAddress  String?  @db.VarChar(100)
+  userAgent  String?  @db.VarChar(500)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?  @db.VarChar(100)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
