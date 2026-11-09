@@ -127,28 +127,17 @@ WEB_PORT=80
 ```
 *(If you have a domain pointing to `200.97.162.130`, replace `http://200.97.162.130` with `https://yourdomain.com`).*
 
-### Step 3.5: Deploy
+### Step 3.5: Deploy (100% Fully Automated)
 1. Click the green **Deploy** button in the top right corner.
 2. Dokploy will:
    - Clone the lightweight repository.
    - Run the multi-stage Alpine build for `api` and `web`.
    - Start the `esushrut_postgres` database container.
-   - Automatically execute Prisma migrations via `docker-entrypoint.sh`.
+   - **Automatically execute database migrations via `docker-entrypoint.sh`**.
+   - **Automatically run the seed script (`prisma/seed.js`) on first deployment** to initialize hospital departments, master questions, escalation rules, and default admin accounts (`admin` / `Admin@12345`)!
    - Start the `esushrut_api` and `esushrut_web` containers.
 
-### Step 3.6: Seed Demonstration Data (One-Time Setup)
-To populate the database with the pre-configured eSushrut Model Civil Hospital, 7 departments, multilingual questions, and admin users:
-
-In Dokploy:
-1. Navigate to the **Docker** tab on the left menu (or inside the Project service).
-2. Open terminal for container `esushrut_api` and run:
-```bash
-npx prisma db seed
-```
-*Or from your VPS SSH terminal:*
-```bash
-docker exec -it esushrut_api npx prisma db seed
-```
+> **Zero Manual Steps Required**: You do **not** need to manually run `npx prisma db seed`. The container startup script automatically detects whether the database is fresh, initializes all seed data on the first run, and safely preserves existing live data on all subsequent redeployments.
 
 ---
 
