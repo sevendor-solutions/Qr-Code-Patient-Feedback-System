@@ -121,11 +121,11 @@ POSTGRES_DB=esushrut_feedback
 JWT_ACCESS_SECRET=esushrut-g5-jwt-access-secret-cdac-key-2026
 JWT_REFRESH_SECRET=esushrut-g5-jwt-refresh-secret-cdac-key-2026
 QR_HMAC_SECRET=esushrut-cdac-secure-hmac-sha256-key-salt
-FRONTEND_URL=http://200.97.162.130
-API_BASE_URL=http://200.97.162.130/api
-WEB_PORT=80
+FRONTEND_URL=http://200.97.162.130:8080
+API_BASE_URL=http://200.97.162.130:8080/api
+WEB_PORT=8080
 ```
-*(If you have a domain pointing to `200.97.162.130`, replace `http://200.97.162.130` with `https://yourdomain.com`).*
+*(Port 8080 is used because Dokploy's Traefik proxy already occupies port 80 on the host. If you map a custom domain in Dokploy, Traefik handles port 80/443 SSL automatically).*
 
 ### Step 3.5: Deploy (100% Fully Automated)
 1. Click the green **Deploy** button in the top right corner.
@@ -144,7 +144,7 @@ WEB_PORT=80
 ## 4. Verification & Production Access
 
 Once deployed, access the system directly at your server IP or domain:
-* **Citizen Mobile Feedback Portal:** `http://200.97.162.130`
-* **Hospital Admin Command Center:** `http://200.97.162.130/admin`
-* **Swagger API Documentation:** `http://200.97.162.130/api/docs`
+* **Citizen Mobile Feedback Portal:** `http://200.97.162.130:8080`
+* **Hospital Admin Command Center:** `http://200.97.162.130:8080/admin`
+* **Swagger API Documentation:** `http://200.97.162.130:8080/api/docs`
 * **Admin Login:** Username `admin` | Password `Admin@12345`
