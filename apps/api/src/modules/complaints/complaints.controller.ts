@@ -81,7 +81,7 @@ export class ComplaintsController {
       (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
     const userAgent = req.headers['user-agent'] || 'unknown';
 
-    return this.complaintsService.submitComplaint(validated, photoUrl, ip, userAgent);
+    return this.complaintsService.submitComplaint(validated as any, photoUrl, ip, userAgent);
   }
 
   @Public()
@@ -124,6 +124,6 @@ export class ComplaintsController {
       (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
     const userAgent = req.headers['user-agent'] || 'unknown';
 
-    return this.complaintsService.updateComplaintStatus(id, validated, userId, ip, userAgent);
+    return this.complaintsService.updateComplaintStatus(id, validated as any, userId, ip, userAgent);
   }
 }

@@ -15,19 +15,27 @@ export const RatingItemSchema = z.object({
 });
 
 export const SubmitFeedbackSchema = z.object({
-  hospitalId: z.string().uuid('Invalid hospital ID'),
-  departmentId: z.string().uuid('Invalid department ID'),
+  hospitalId: z.string().uuid('Invalid hospital ID').optional(),
+  departmentId: z.string().uuid('Invalid department ID').optional(),
   locationId: z.string().uuid('Invalid location ID').optional(),
-  qrToken: z.string().min(8, 'QR validation token is required'),
-  language: z.enum(['en', 'te', 'hi']).default('en'),
+  qrToken: z.string().min(8, 'QR validation token is required').optional(),
+  language: z.enum(['en', 'te', 'hi', 'or']).default('or'),
   patientName: z.string().max(100).optional(),
-  mobile: z.string().regex(MobileRegex, 'Mobile must be a valid 10-digit Indian number'),
+  mobile: z.string().regex(MobileRegex, 'Mobile must be a valid 10-digit Indian number').optional(),
   crNumber: z.string().max(50).optional(),
-  patientType: z.nativeEnum(PatientType),
-  ratings: z.array(RatingItemSchema).min(1, 'At least one service rating is required'),
-  overallEmoji: z.number().int().min(1).max(5),
-  npsScore: z.number().int().min(0, 'NPS must be at least 0').max(10, 'NPS cannot exceed 10'),
-  comments: z.string().max(1000).optional(),
+  patientType: z.nativeEnum(PatientType).optional().default(PatientType.OPD),
+  ratings: z.array(RatingItemSchema).optional().default([]),
+  overallEmoji: z.number().int().min(1).max(5).optional(),
+  npsScore: z.number().int().min(0, 'NPS must be at least 0').max(10, 'NPS cannot exceed 10').optional(),
+  comments: z.string().max(2000).optional(),
+  service: z.string().optional(),
+  hospital: z.string().optional(),
+  date: z.string().optional(),
+  patient: z.string().optional(),
+  ticket: z.string().optional(),
+  ward: z.string().optional(),
+  answers: z.array(z.number().int().min(1).max(5)).optional(),
+  submittedAt: z.string().optional(),
 });
 
 export const SubmitComplaintSchema = z.object({

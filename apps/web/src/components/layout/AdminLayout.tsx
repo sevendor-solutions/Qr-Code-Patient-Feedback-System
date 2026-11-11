@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AppHeader } from './AppHeader';
-import { MainNav } from './MainNav';
 import { SubMenuBar } from './SubMenuBar';
 import { AppFooter } from './AppFooter';
 
@@ -24,7 +23,6 @@ export const AdminLayout: React.FC = () => {
   return (
     <div className="d-flex flex-column min-vh-100" style={{ backgroundColor: '#EEF2F7' }}>
       <AppHeader />
-      <MainNav />
       <SubMenuBar />
       <main className="flex-grow-1">
         <Outlet />

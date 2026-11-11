@@ -1,0 +1,419 @@
+/* Patient Feedback CSS identical to index (1).html */
+.patient-feedback-app {
+  color-scheme: light;
+  --bg: #f3f7f6;
+  --surface: #ffffff;
+  --fg: #112e2c;
+  --muted: #4f6967;
+  --line: #d3e0de;
+  --opd: #0b7a75;
+  --ipd: #2f4fa3;
+  --accent: var(--opd);
+  --on-accent: #ffffff;
+  --warn: #b3261e;
+  --warn-soft: #fbe9e7;
+  --font-display: "Bricolage Grotesque", "Noto Sans Oriya", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Source Sans 3", "Noto Sans Oriya", "Segoe UI", system-ui, sans-serif;
+
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.55;
+  padding-block: 24px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: dark) {
+  .patient-feedback-app {
+    color-scheme: dark;
+    --bg: #0d1c1b;
+    --surface: #152827;
+    --fg: #e6f2f0;
+    --muted: #9bb5b2;
+    --line: #2a4240;
+    --opd: #4fc4bc;
+    --ipd: #8da6f0;
+    --on-accent: #0d1c1b;
+    --warn: #ff8a80;
+    --warn-soft: #3a1f1d;
+  }
+}
+
+.patient-feedback-app * {
+  box-sizing: border-box;
+}
+
+.patient-feedback-app main {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.patient-feedback-app h1,
+.patient-feedback-app h2,
+.patient-feedback-app h3 {
+  font-family: var(--font-display);
+  margin: 0;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.patient-feedback-app h1 {
+  font-size: 1.85rem;
+}
+
+.patient-feedback-app h2 {
+  font-size: 1.4rem;
+}
+
+.patient-feedback-app p {
+  margin: 0;
+}
+
+.patient-feedback-app .en {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.patient-feedback-app .eyebrow {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.patient-feedback-app header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.patient-feedback-app .choices {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.patient-feedback-app .choice {
+  appearance: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--fg);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-left-width: 8px;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.patient-feedback-app .choice:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.patient-feedback-app .choice[data-svc="opd"] {
+  border-left-color: var(--opd);
+}
+
+.patient-feedback-app .choice[data-svc="ipd"] {
+  border-left-color: var(--ipd);
+}
+
+.patient-feedback-app .choice .abbr {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+
+.patient-feedback-app .choice[data-svc="opd"] .abbr {
+  color: var(--opd);
+}
+
+.patient-feedback-app .choice[data-svc="ipd"] .abbr {
+  color: var(--ipd);
+}
+
+.patient-feedback-app .choice .name {
+  font-weight: 600;
+}
+
+.patient-feedback-app form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.patient-feedback-app form[data-svc="opd"] {
+  --accent: var(--opd);
+}
+
+.patient-feedback-app form[data-svc="ipd"] {
+  --accent: var(--ipd);
+}
+
+.patient-feedback-app .intro {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--accent);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.patient-feedback-app .intro h2 {
+  color: var(--accent);
+}
+
+.patient-feedback-app .details {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+  border-inline: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.patient-feedback-app .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.patient-feedback-app .field label {
+  font-weight: 600;
+}
+
+.patient-feedback-app input[type="text"],
+.patient-feedback-app input[type="date"],
+.patient-feedback-app textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 12px;
+  min-width: 0;
+}
+
+.patient-feedback-app textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.patient-feedback-app .qlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.patient-feedback-app .q {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.patient-feedback-app .q.missing {
+  border-color: var(--warn) !important;
+  background: var(--warn-soft) !important;
+}
+
+.patient-feedback-app .qhead {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.patient-feedback-app .qnum {
+  flex: none;
+  min-width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  font-size: 0.95rem;
+}
+
+.patient-feedback-app .qtext {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.patient-feedback-app .qtext .en {
+  font-weight: 400;
+}
+
+.patient-feedback-app .scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.patient-feedback-app .opt {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.patient-feedback-app .opt input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.patient-feedback-app .opt span.opt-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  text-align: center;
+  height: 100%;
+  padding: 8px 2px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+  hyphens: none;
+  transition: all 0.15s ease;
+}
+
+.patient-feedback-app .opt b {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.1;
+}
+
+.patient-feedback-app .opt input:checked + span.opt-box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.patient-feedback-app .opt input:focus-visible + span.opt-box {
+  outline: 3px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.patient-feedback-app .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.patient-feedback-app .status {
+  min-height: 1.4em;
+  font-weight: 600;
+}
+
+.patient-feedback-app .status.err {
+  color: var(--warn);
+}
+
+.patient-feedback-app button.primary {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 15px 18px;
+  background: var(--accent);
+  color: var(--on-accent);
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+
+.patient-feedback-app button.primary:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.patient-feedback-app button.link {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  font: inherit;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.patient-feedback-app .choice:focus-visible,
+.patient-feedback-app button.primary:focus-visible,
+.patient-feedback-app button.link:focus-visible,
+.patient-feedback-app input:focus-visible,
+.patient-feedback-app textarea:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.patient-feedback-app .done {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--accent);
+  border-radius: 14px;
+  padding: 28px 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.patient-feedback-app .done[data-svc="opd"] {
+  --accent: var(--opd);
+}
+
+.patient-feedback-app .done[data-svc="ipd"] {
+  --accent: var(--ipd);
+}

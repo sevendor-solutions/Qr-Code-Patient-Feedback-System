@@ -121,7 +121,7 @@ export class ReportsService {
 
     // 4. Service Wise Satisfaction Score (9 master categories)
     const categoryTotals: Record<string, { sum: number; count: number }> = {};
-    for (const cat of Object.values(RatingCategory)) {
+    for (const cat of Object.values(RatingCategory) as string[]) {
       categoryTotals[cat] = { sum: 0, count: 0 };
     }
 

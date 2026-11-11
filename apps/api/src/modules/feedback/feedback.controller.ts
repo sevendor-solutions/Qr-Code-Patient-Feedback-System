@@ -28,7 +28,7 @@ export class FeedbackController {
     const ip =
       (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
     const userAgent = req.headers['user-agent'] || 'unknown';
-    return this.feedbackService.submitFeedback(validated, ip, userAgent);
+    return this.feedbackService.submitFeedback(validated as any, ip, userAgent);
   }
 
   @UseGuards(JwtAuthGuard)

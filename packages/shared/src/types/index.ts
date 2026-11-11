@@ -37,7 +37,7 @@ export enum RatingCategory {
   STAFF_BEHAVIOUR = 'STAFF_BEHAVIOUR',
 }
 
-export type SupportedLanguage = 'en' | 'te' | 'hi';
+export type SupportedLanguage = 'en' | 'te' | 'hi' | 'or';
 
 export interface QrPayload {
   hospitalId: string;
@@ -52,19 +52,27 @@ export interface FeedbackRatingInput {
 }
 
 export interface SubmitFeedbackDto {
-  hospitalId: string;
-  departmentId: string;
+  hospitalId?: string;
+  departmentId?: string;
   locationId?: string;
-  qrToken: string;
-  language: SupportedLanguage;
+  qrToken?: string;
+  language?: SupportedLanguage;
   patientName?: string;
-  mobile: string; // 10 digits
+  mobile?: string; // 10 digits or default
   crNumber?: string;
-  patientType: PatientType;
-  ratings: FeedbackRatingInput[];
-  overallEmoji: number; // 1 to 5
-  npsScore: number; // 0 to 10
+  patientType?: PatientType;
+  ratings?: FeedbackRatingInput[];
+  overallEmoji?: number; // 1 to 5
+  npsScore?: number; // 0 to 10
   comments?: string;
+  service?: string;
+  hospital?: string;
+  date?: string;
+  patient?: string;
+  ticket?: string;
+  ward?: string;
+  answers?: number[];
+  submittedAt?: string;
 }
 
 export interface SubmitComplaintDto {
