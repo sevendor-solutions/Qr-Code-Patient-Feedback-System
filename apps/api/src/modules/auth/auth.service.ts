@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -12,7 +13,7 @@ import { AuditService } from '../audit/audit.service';
 import { AuthUser, UserRole } from '@esushrut/shared';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
@@ -21,6 +22,101 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly auditService: AuditService,
   ) {}
+
+  async onModuleInit() {
+    try {
+      // 1. Ensure default hospital exists
+      let hospital = await this.prisma.hospital.findFirst();
+      if (!hospital) {
+        hospital = await this.prisma.hospital.create({
+          data: {
+            code: 'ESUSHRUT-CENTRAL',
+            name: 'eSushrut Model Civil & Teaching Hospital',
+            address: 'Central Medical Enclave, Health City, New Delhi - 110001',
+            contactEmail: 'nodal.grievance@esushrut-cdac.in',
+            contactPhone: '011-26598700',
+            logoUrl: '/cdac-logo.svg',
+            isActive: true,
+            createdBy: 'SYSTEM_INSTALLER',
+          },
+        });
+      }
+
+      // 2. Ensure OPD department exists
+      let opdDept = await this.prisma.department.findFirst({
+        where: { hospitalId: hospital.id, code: 'OPD' },
+      });
+      if (!opdDept) {
+        opdDept = await this.prisma.department.create({
+          data: {
+            hospitalId: hospital.id,
+            code: 'OPD',
+            name: 'Outpatient Department (OPD)',
+            headName: 'Dr. Rajesh Sharma',
+            headEmail: 'rajesh.sharma@hospital.gov.in',
+            headPhone: '9811223344',
+            createdBy: 'SYSTEM_INSTALLER',
+          },
+        });
+      }
+
+      // 3. Ensure default test users exist and credentials match
+      const salt = await bcrypt.genSalt(10);
+      const adminPassHash = await bcrypt.hash('Admin@12345', salt);
+      const headPassHash = await bcrypt.hash('Head@12345', salt);
+      const officerPassHash = await bcrypt.hash('Officer@12345', salt);
+
+      await this.prisma.user.upsert({
+        where: { username: 'admin' },
+        update: { passwordHash: adminPassHash, isActive: true },
+        create: {
+          username: 'admin',
+          passwordHash: adminPassHash,
+          email: 'superadmin@esushrut-cdac.in',
+          fullName: 'Dr. B. K. Murthy (Director General)',
+          mobile: '9810010010',
+          role: UserRole.SUPER_ADMIN,
+          hospitalId: hospital.id,
+          createdBy: 'SYSTEM_INSTALLER',
+        },
+      });
+
+      await this.prisma.user.upsert({
+        where: { username: 'head_opd' },
+        update: { passwordHash: headPassHash, isActive: true },
+        create: {
+          username: 'head_opd',
+          passwordHash: headPassHash,
+          email: 'head.opd@hospital.gov.in',
+          fullName: 'Dr. Rajesh Sharma (Head - OPD)',
+          mobile: '9811223344',
+          role: UserRole.DEPT_HEAD,
+          hospitalId: hospital.id,
+          departmentId: opdDept.id,
+          createdBy: 'SYSTEM_INSTALLER',
+        },
+      });
+
+      await this.prisma.user.upsert({
+        where: { username: 'officer_nodal' },
+        update: { passwordHash: officerPassHash, isActive: true },
+        create: {
+          username: 'officer_nodal',
+          passwordHash: officerPassHash,
+          email: 'nodal.feedback@hospital.gov.in',
+          fullName: 'Shri Vikram Rathore (Nodal Grievance Officer)',
+          mobile: '9899887766',
+          role: UserRole.FEEDBACK_OFFICER,
+          hospitalId: hospital.id,
+          createdBy: 'SYSTEM_INSTALLER',
+        },
+      });
+
+      this.logger.log('Default credentials verified and ensured for admin, head_opd, officer_nodal.');
+    } catch (err: any) {
+      this.logger.warn(`Could not auto-seed users in onModuleInit: ${err.message}`);
+    }
+  }
 
   async validateUser(username: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findUnique({

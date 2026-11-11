@@ -13,31 +13,27 @@ function createQrSignature(hospitalId, departmentId, locationId, secret) {
 }
 
 async function main() {
-  console.log('--- Checking eSushrut G5 Database State ---');
+  console.log('--- Checking & Initializing eSushrut G5 Database State ---');
 
-  // Check if database is already seeded
-  const existingUsers = await prisma.user.count();
-  if (existingUsers > 0) {
-    console.log(`==> Database already has ${existingUsers} active user(s). Skipping automatic seed.`);
-    return;
+  // 1. Create or Find Hospital
+  let hospital = await prisma.hospital.findUnique({ where: { code: 'ESUSHRUT-CENTRAL' } });
+  if (!hospital) {
+    hospital = await prisma.hospital.create({
+      data: {
+        code: 'ESUSHRUT-CENTRAL',
+        name: 'eSushrut Model Civil & Teaching Hospital',
+        address: 'Central Medical Enclave, Health City, New Delhi - 110001',
+        contactEmail: 'nodal.grievance@esushrut-cdac.in',
+        contactPhone: '011-26598700',
+        logoUrl: '/cdac-logo.svg',
+        isActive: true,
+        createdBy: 'SYSTEM_INSTALLER',
+      },
+    });
+    console.log(`Created Hospital: ${hospital.name}`);
+  } else {
+    console.log(`Using existing Hospital: ${hospital.name}`);
   }
-
-  console.log('==> Empty database detected. Running automatic first-time initialization and seed...');
-
-  // 1. Create Hospital
-  const hospital = await prisma.hospital.create({
-    data: {
-      code: 'ESUSHRUT-CENTRAL',
-      name: 'eSushrut Model Civil & Teaching Hospital',
-      address: 'Central Medical Enclave, Health City, New Delhi - 110001',
-      contactEmail: 'nodal.grievance@esushrut-cdac.in',
-      contactPhone: '011-26598700',
-      logoUrl: '/cdac-logo.svg',
-      isActive: true,
-      createdBy: 'SYSTEM_INSTALLER',
-    },
-  });
-  console.log(`Created Hospital: ${hospital.name}`);
 
   // 2. Create Departments
   const deptData = [
@@ -52,15 +48,26 @@ async function main() {
 
   const departments = {};
   for (const d of deptData) {
-    departments[d.code] = await prisma.department.create({
-      data: {
-        hospitalId: hospital.id,
-        ...d,
-        createdBy: 'SYSTEM_INSTALLER',
+    let dept = await prisma.department.findUnique({
+      where: {
+        hospitalId_code: {
+          hospitalId: hospital.id,
+          code: d.code,
+        },
       },
     });
+    if (!dept) {
+      dept = await prisma.department.create({
+        data: {
+          hospitalId: hospital.id,
+          ...d,
+          createdBy: 'SYSTEM_INSTALLER',
+        },
+      });
+    }
+    departments[d.code] = dept;
   }
-  console.log(`Created ${Object.keys(departments).length} Departments`);
+  console.log(`Verified ${Object.keys(departments).length} Departments`);
 
   // 3. Create Locations
   const locationData = [
@@ -74,20 +81,25 @@ async function main() {
 
   const locations = [];
   for (const loc of locationData) {
-    const createdLoc = await prisma.qrLocation.create({
-      data: {
-        hospitalId: hospital.id,
-        departmentId: departments[loc.deptCode].id,
-        name: loc.name,
-        floor: loc.floor,
-        ward: loc.ward,
-        counter: loc.counter,
-        createdBy: 'SYSTEM_INSTALLER',
-      },
+    let createdLoc = await prisma.qrLocation.findFirst({
+      where: { hospitalId: hospital.id, departmentId: departments[loc.deptCode].id, name: loc.name },
     });
+    if (!createdLoc) {
+      createdLoc = await prisma.qrLocation.create({
+        data: {
+          hospitalId: hospital.id,
+          departmentId: departments[loc.deptCode].id,
+          name: loc.name,
+          floor: loc.floor,
+          ward: loc.ward,
+          counter: loc.counter,
+          createdBy: 'SYSTEM_INSTALLER',
+        },
+      });
+    }
     locations.push(createdLoc);
   }
-  console.log(`Created ${locations.length} Locations`);
+  console.log(`Verified ${locations.length} Locations`);
 
   // 4. Create Service Categories for Complaints
   const categories = [
@@ -106,14 +118,18 @@ async function main() {
 
   const createdCategories = {};
   for (const cat of categories) {
-    createdCategories[cat.code] = await prisma.serviceCategory.create({
-      data: {
-        ...cat,
-        createdBy: 'SYSTEM_INSTALLER',
-      },
-    });
+    let c = await prisma.serviceCategory.findUnique({ where: { code: cat.code } });
+    if (!c) {
+      c = await prisma.serviceCategory.create({
+        data: {
+          ...cat,
+          createdBy: 'SYSTEM_INSTALLER',
+        },
+      });
+    }
+    createdCategories[cat.code] = c;
   }
-  console.log(`Created ${categories.length} Service Categories`);
+  console.log(`Verified ${categories.length} Service Categories`);
 
   // 5. Create Feedback Questions
   const questions = [
@@ -128,24 +144,29 @@ async function main() {
     { category: 'STAFF_BEHAVIOUR', questionEn: 'Overall behaviour and courtesy of hospital staff?', questionTe: 'ఆసుపత్రి సిబ్బంది యొక్క సమగ్ర ప్రవర్తన మరియు మర్యాద?', questionHi: 'अस्पताल कर्मचारियों का समग्र व्यवहार और शिष्टाचार?', displayOrder: 9 },
   ];
 
-  for (const q of questions) {
-    await prisma.question.create({
-      data: {
-        ...q,
-        createdBy: 'SYSTEM_INSTALLER',
-      },
-    });
+  const existingQuestions = await prisma.question.count();
+  if (existingQuestions === 0) {
+    for (const q of questions) {
+      await prisma.question.create({
+        data: {
+          ...q,
+          createdBy: 'SYSTEM_INSTALLER',
+        },
+      });
+    }
   }
-  console.log(`Created ${questions.length} Feedback Questions`);
+  console.log(`Verified Feedback Questions`);
 
-  // 6. Create Users
+  // 6. Create or Update Users with Exact Credentials
   const salt = await bcrypt.genSalt(10);
   const adminPassHash = await bcrypt.hash('Admin@12345', salt);
   const headPassHash = await bcrypt.hash('Head@12345', salt);
   const officerPassHash = await bcrypt.hash('Officer@12345', salt);
 
-  const adminUser = await prisma.user.create({
-    data: {
+  const adminUser = await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: { passwordHash: adminPassHash, isActive: true },
+    create: {
       username: 'admin',
       passwordHash: adminPassHash,
       email: 'superadmin@esushrut-cdac.in',
@@ -157,8 +178,10 @@ async function main() {
     },
   });
 
-  const headOpdUser = await prisma.user.create({
-    data: {
+  const headOpdUser = await prisma.user.upsert({
+    where: { username: 'head_opd' },
+    update: { passwordHash: headPassHash, isActive: true },
+    create: {
       username: 'head_opd',
       passwordHash: headPassHash,
       email: 'head.opd@hospital.gov.in',
@@ -171,8 +194,10 @@ async function main() {
     },
   });
 
-  const headEmgUser = await prisma.user.create({
-    data: {
+  const headEmgUser = await prisma.user.upsert({
+    where: { username: 'head_emergency' },
+    update: { passwordHash: headPassHash, isActive: true },
+    create: {
       username: 'head_emergency',
       passwordHash: headPassHash,
       email: 'head.emg@hospital.gov.in',
@@ -185,8 +210,10 @@ async function main() {
     },
   });
 
-  const officerUser = await prisma.user.create({
-    data: {
+  const officerUser = await prisma.user.upsert({
+    where: { username: 'officer_nodal' },
+    update: { passwordHash: officerPassHash, isActive: true },
+    create: {
       username: 'officer_nodal',
       passwordHash: officerPassHash,
       email: 'nodal.feedback@hospital.gov.in',
@@ -197,65 +224,62 @@ async function main() {
       createdBy: 'SYSTEM_INSTALLER',
     },
   });
-  console.log('Created Users: admin, head_opd, head_emergency, officer_nodal');
+  console.log('Ensured Users: admin, head_opd, head_emergency, officer_nodal');
 
-  // 7. Create Escalation Matrix
-  await prisma.escalationMatrix.create({
-    data: {
-      departmentId: departments['OPD'].id,
-      level: 1,
-      slaHours: 24,
-      escalateToUserId: officerUser.id,
-      createdBy: 'SYSTEM_INSTALLER',
-    },
-  });
-  await prisma.escalationMatrix.create({
-    data: {
-      departmentId: departments['OPD'].id,
-      level: 2,
-      slaHours: 48,
-      escalateToUserId: headOpdUser.id,
-      createdBy: 'SYSTEM_INSTALLER',
-    },
-  });
-  await prisma.escalationMatrix.create({
-    data: {
-      departmentId: departments['OPD'].id,
-      level: 3,
-      slaHours: 72,
-      escalateToUserId: adminUser.id,
-      createdBy: 'SYSTEM_INSTALLER',
-    },
-  });
-  await prisma.escalationMatrix.create({
-    data: {
-      departmentId: departments['EMG'].id,
-      level: 1,
-      slaHours: 4,
-      escalateToUserId: headEmgUser.id,
-      createdBy: 'SYSTEM_INSTALLER',
-    },
-  });
-
-  // 8. Generate QR Codes
-  for (const deptCode of ['OPD', 'EMG', 'IPD', 'LAB', 'PHARM', 'BILL']) {
-    const dept = departments[deptCode];
-    const loc = locations.find((l) => l.departmentId === dept.id);
-    const token = createQrSignature(hospital.id, dept.id, loc ? loc.id : undefined, QR_SECRET);
-    const targetUrl = `${FRONTEND_URL}/feedback?h=${hospital.id}&d=${dept.id}${loc ? `&loc=${loc.id}` : ''}&t=${token}`;
-
-    await prisma.qrMaster.create({
+  // 7. Create Escalation Matrix if none exists
+  const existingEsc = await prisma.escalationMatrix.count();
+  if (existingEsc === 0) {
+    await prisma.escalationMatrix.create({
       data: {
-        hospitalId: hospital.id,
-        departmentId: dept.id,
-        locationId: loc ? loc.id : null,
-        code: `QR-${dept.code}-${loc ? loc.counter.replace(/\s+/g, '') : 'MAIN'}`,
-        token,
-        targetUrl,
-        scanCount: 142,
-        createdBy: adminUser.id,
+        departmentId: departments['OPD'].id,
+        level: 1,
+        slaHours: 24,
+        escalateToUserId: officerUser.id,
+        createdBy: 'SYSTEM_INSTALLER',
       },
     });
+    await prisma.escalationMatrix.create({
+      data: {
+        departmentId: departments['OPD'].id,
+        level: 2,
+        slaHours: 48,
+        escalateToUserId: headOpdUser.id,
+        createdBy: 'SYSTEM_INSTALLER',
+      },
+    });
+    await prisma.escalationMatrix.create({
+      data: {
+        departmentId: departments['OPD'].id,
+        level: 3,
+        slaHours: 72,
+        escalateToUserId: adminUser.id,
+        createdBy: 'SYSTEM_INSTALLER',
+      },
+    });
+  }
+
+  // 8. Generate QR Codes if none exists
+  const existingQrs = await prisma.qrMaster.count();
+  if (existingQrs === 0) {
+    for (const deptCode of ['OPD', 'EMG', 'IPD', 'LAB', 'PHARM', 'BILL']) {
+      const dept = departments[deptCode];
+      const loc = locations.find((l) => l.departmentId === dept.id);
+      const token = createQrSignature(hospital.id, dept.id, loc ? loc.id : undefined, QR_SECRET);
+      const targetUrl = `${FRONTEND_URL}/feedback?h=${hospital.id}&d=${dept.id}${loc ? `&loc=${loc.id}` : ''}&t=${token}`;
+
+      await prisma.qrMaster.create({
+        data: {
+          hospitalId: hospital.id,
+          departmentId: dept.id,
+          locationId: loc ? loc.id : null,
+          code: `QR-${dept.code}-${loc && loc.counter ? loc.counter.replace(/\s+/g, '') : 'MAIN'}`,
+          token,
+          targetUrl,
+          scanCount: 142,
+          createdBy: adminUser.id,
+        },
+      });
+    }
   }
 
   console.log('--- Database Seeding Completed Successfully ---');
@@ -264,6 +288,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error('Seed error:', e);
+    process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
