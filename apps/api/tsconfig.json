@@ -11,7 +11,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
-      "@esushrut/shared": ["../../packages/shared/src"]
+      "@esushrut/shared": ["../../packages/shared/dist"]
     },
     "allowJs": true,
     "incremental": true,
