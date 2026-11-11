@@ -10,7 +10,8 @@ COPY apps/api/package*.json ./apps/api/
 COPY apps/web/package*.json ./apps/web/
 
 # Install dependencies
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund
 
 # Copy sources
 COPY packages/shared ./packages/shared

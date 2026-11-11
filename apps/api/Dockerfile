@@ -18,7 +18,8 @@ COPY apps/api/package*.json ./apps/api/
 COPY apps/web/package*.json ./apps/web/
 
 # Clean install all dependencies (including devDependencies for TypeScript compilation)
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund
 
 # Copy source code
 COPY packages/shared ./packages/shared
@@ -32,7 +33,7 @@ RUN npm run build
 
 # Prune devDependencies to keep final production node_modules as small as possible
 WORKDIR /app
-RUN npm prune --omit=dev --no-audit
+RUN npm prune --omit=dev --no-audit --no-fund
 
 # ==============================================================================
 # STAGE 2: Lightweight Production Runner
