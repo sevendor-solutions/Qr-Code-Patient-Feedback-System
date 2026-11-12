@@ -1,6 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiClient } from '../../api/client';
+import {
+  FaHospital,
+  FaUserMd,
+  FaProcedures,
+  FaCalendarAlt,
+  FaUser,
+  FaIdCard,
+  FaBed,
+  FaCommentDots,
+  FaPaperPlane,
+  FaArrowLeft,
+  FaChevronRight,
+  FaCheckCircle,
+  FaRedo,
+  FaClipboardCheck,
+  FaHourglassHalf,
+  FaClock,
+  FaStopwatch,
+  FaBolt,
+  FaRocket,
+} from 'react-icons/fa';
+import {
+  FaRegFaceFrown,
+  FaFaceFrown,
+  FaRegFaceMeh,
+  FaFaceMeh,
+  FaRegFaceSmile,
+  FaFaceSmile,
+  FaRegFaceSmileBeam,
+  FaFaceSmileBeam,
+  FaRegFaceGrinStars,
+  FaFaceGrinStars,
+} from 'react-icons/fa6';
 import './PatientFeedback.css';
 
 interface QuestionItem {
@@ -213,6 +246,57 @@ export const MobileFeedbackPage: React.FC = () => {
     }
   };
 
+  const getScaleIcon = (n: number, isTime?: boolean, isSelected?: boolean) => {
+    if (isTime) {
+      switch (n) {
+        case 1:
+          return <FaHourglassHalf size={18} />;
+        case 2:
+          return <FaClock size={18} />;
+        case 3:
+          return <FaStopwatch size={18} />;
+        case 4:
+          return <FaBolt size={18} />;
+        case 5:
+          return <FaRocket size={18} />;
+        default:
+          return null;
+      }
+    }
+
+    if (isSelected) {
+      switch (n) {
+        case 1:
+          return <FaFaceFrown size={20} />;
+        case 2:
+          return <FaFaceMeh size={20} />;
+        case 3:
+          return <FaFaceSmile size={20} />;
+        case 4:
+          return <FaFaceSmileBeam size={20} />;
+        case 5:
+          return <FaFaceGrinStars size={20} />;
+        default:
+          return null;
+      }
+    }
+
+    switch (n) {
+      case 1:
+        return <FaRegFaceFrown size={20} />;
+      case 2:
+        return <FaRegFaceMeh size={20} />;
+      case 3:
+        return <FaRegFaceSmile size={20} />;
+      case 4:
+        return <FaRegFaceSmileBeam size={20} />;
+      case 5:
+        return <FaRegFaceGrinStars size={20} />;
+      default:
+        return null;
+    }
+  };
+
   const currentForm = FORMS[svc];
   const otherSvc = svc === 'opd' ? 'ipd' : 'opd';
 
@@ -221,7 +305,10 @@ export const MobileFeedbackPage: React.FC = () => {
       <main>
         {/* Official Header */}
         <header>
-          <span className="eyebrow">DHH Kataka · ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ</span>
+          <div className="hospital-badge">
+            <FaHospital className="badge-icon" />
+            <span className="eyebrow">DHH Kataka · ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ</span>
+          </div>
           <h1 id="title">
             {step === 'choose' && 'ଆପଣଙ୍କ ମତାମତ'}
             {step === 'form' && `${currentForm.abbr} ମତାମତ`}
@@ -244,9 +331,22 @@ export const MobileFeedbackPage: React.FC = () => {
               id="pick-opd"
               onClick={() => startForm('opd')}
             >
-              <span className="abbr">OPD</span>
-              <span className="name">ବହିଃ-ବିଭାଗ ରୋଗୀ</span>
-              <span className="en">Outpatient (10 questions)</span>
+              <div className="choice-left">
+                <div
+                  className="choice-icon-badge"
+                  style={{ color: 'var(--opd)', background: 'rgba(11, 122, 117, 0.1)' }}
+                >
+                  <FaUserMd size={26} />
+                </div>
+                <div className="choice-details">
+                  <span className="abbr">OPD</span>
+                  <span className="name">ବହିଃ-ବିଭାଗ ରୋଗୀ</span>
+                  <span className="en">Outpatient (10 questions)</span>
+                </div>
+              </div>
+              <div className="choice-arrow">
+                <FaChevronRight size={16} />
+              </div>
             </button>
 
             <button
@@ -256,9 +356,22 @@ export const MobileFeedbackPage: React.FC = () => {
               id="pick-ipd"
               onClick={() => startForm('ipd')}
             >
-              <span className="abbr">IPD</span>
-              <span className="name">ଅନ୍ତଃ-ବିଭାଗ ରୋଗୀ</span>
-              <span className="en">Inpatient (20 questions)</span>
+              <div className="choice-left">
+                <div
+                  className="choice-icon-badge"
+                  style={{ color: 'var(--ipd)', background: 'rgba(47, 79, 163, 0.1)' }}
+                >
+                  <FaProcedures size={26} />
+                </div>
+                <div className="choice-details">
+                  <span className="abbr">IPD</span>
+                  <span className="name">ଅନ୍ତଃ-ବିଭାଗ ରୋଗୀ</span>
+                  <span className="en">Inpatient (20 questions)</span>
+                </div>
+              </div>
+              <div className="choice-arrow">
+                <FaChevronRight size={16} />
+              </div>
             </button>
           </section>
         )}
@@ -268,7 +381,12 @@ export const MobileFeedbackPage: React.FC = () => {
           <form id="step-form" data-svc={svc} onSubmit={handleSubmit} noValidate>
             {/* Intro Card */}
             <div className="intro">
-              <h2 id="form-title">{currentForm.title}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FaClipboardCheck size={20} color="var(--accent)" />
+                <h2 id="form-title" style={{ margin: 0 }}>
+                  {currentForm.title}
+                </h2>
+              </div>
               <p id="form-intro">{currentForm.intro}</p>
               <p className="en" id="form-intro-en">
                 {currentForm.introEn}
@@ -279,7 +397,10 @@ export const MobileFeedbackPage: React.FC = () => {
             <fieldset className="details" id="details">
               <div className="field">
                 <label htmlFor="f-date">
-                  ତାରିଖ <span className="en">Date</span>
+                  <FaCalendarAlt className="field-icon" />
+                  <span>
+                    ତାରିଖ <span className="en">Date</span>
+                  </span>
                 </label>
                 <input
                   type="date"
@@ -292,14 +413,17 @@ export const MobileFeedbackPage: React.FC = () => {
 
               <div className="field">
                 <label htmlFor="f-name">
-                  ରୋଗୀର ନାମ <span className="en">Patient name (optional)</span>
+                  <FaUser className="field-icon" />
+                  <span>
+                    ରୋଗୀର ନାମ <span className="en">Patient name (optional)</span>
+                  </span>
                 </label>
                 <input
                   type="text"
                   id="f-name"
                   name="f-name"
                   autoComplete="off"
-                  placeholder=""
+                  placeholder="e.g. Ramesh Sahoo"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                 />
@@ -307,14 +431,17 @@ export const MobileFeedbackPage: React.FC = () => {
 
               <div className="field">
                 <label htmlFor="f-ticket">
-                  {currentForm.ticketOd} <span className="en">{currentForm.ticketEn} (optional)</span>
+                  <FaIdCard className="field-icon" />
+                  <span>
+                    {currentForm.ticketOd} <span className="en">{currentForm.ticketEn} (optional)</span>
+                  </span>
                 </label>
                 <input
                   type="text"
                   id="f-ticket"
                   name="f-ticket"
                   autoComplete="off"
-                  placeholder=""
+                  placeholder={svc === 'opd' ? 'e.g. OPD-12345' : 'e.g. IPD-98765'}
                   value={ticketNumber}
                   onChange={(e) => setTicketNumber(e.target.value)}
                 />
@@ -323,14 +450,17 @@ export const MobileFeedbackPage: React.FC = () => {
               {currentForm.ward && (
                 <div className="field">
                   <label htmlFor="f-ward">
-                    ୱାର୍ଡ / ବେଡ୍ ନଂ <span className="en">Ward / Bed no. (optional)</span>
+                    <FaBed className="field-icon" />
+                    <span>
+                      ୱାର୍ଡ / ବେଡ୍ ନଂ <span className="en">Ward / Bed no. (optional)</span>
+                    </span>
                   </label>
                   <input
                     type="text"
                     id="f-ward"
                     name="f-ward"
                     autoComplete="off"
-                    placeholder=""
+                    placeholder="e.g. Male Medical Ward, Bed 12"
                     value={wardName}
                     onChange={(e) => setWardName(e.target.value)}
                   />
@@ -366,19 +496,14 @@ export const MobileFeedbackPage: React.FC = () => {
                             onChange={() => handleSelectRating(qNum, n)}
                           />
                           <span>
+                            <span className="scale-icon-wrap">
+                              {getScaleIcon(n, q.time, selectedVal === n)}
+                            </span>
                             <b>{n}</b>
-                            <span style={{ border: 0, padding: 0, background: 'none', height: 'auto' }}>
+                            <span className="scale-label-od">
                               {(q.time ? TIME_OD : SCALE_OD)[n - 1]}
                             </span>
-                            <span
-                              style={{
-                                border: 0,
-                                padding: 0,
-                                background: 'none',
-                                height: 'auto',
-                                opacity: 0.8,
-                              }}
-                            >
+                            <span className="scale-label-en">
                               {(q.time ? TIME_EN : SCALE_EN)[n - 1]}
                             </span>
                           </span>
@@ -393,11 +518,15 @@ export const MobileFeedbackPage: React.FC = () => {
             {/* Suggestions / Comment Field */}
             <div className="field">
               <label htmlFor="comment">
-                ଆପଣଙ୍କ ପରାମର୍ଶ (ଇଚ୍ଛା ଥିଲେ) <span className="en">Suggestions (optional)</span>
+                <FaCommentDots className="field-icon" />
+                <span>
+                  ଆପଣଙ୍କ ପରାମର୍ଶ (ଇଚ୍ଛା ଥିଲେ) <span className="en">Suggestions (optional)</span>
+                </span>
               </label>
               <textarea
                 id="comment"
                 maxLength={500}
+                placeholder="ଆପଣଙ୍କ କିଛି ପରାମର୍ଶ ଥିଲେ ଏଠାରେ ଲେଖନ୍ତୁ... Write suggestions if any..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
@@ -415,11 +544,13 @@ export const MobileFeedbackPage: React.FC = () => {
               </div>
 
               <button className="primary" type="submit" id="submit" disabled={submitting}>
-                {submitting ? 'ପଠାଯାଉଛି... Submitting...' : 'ଦାଖଲ କରନ୍ତୁ · Submit'}
+                <FaPaperPlane />
+                <span>{submitting ? 'ପଠାଯାଉଛି... Submitting...' : 'ଦାଖଲ କରନ୍ତୁ · Submit'}</span>
               </button>
 
               <button className="link" type="button" id="back" onClick={handleBackToChoose}>
-                ସେବା ବଦଳାନ୍ତୁ · Change service
+                <FaArrowLeft />
+                <span>ସେବା ବଦଳାନ୍ତୁ · Change service</span>
               </button>
             </div>
           </form>
@@ -428,6 +559,12 @@ export const MobileFeedbackPage: React.FC = () => {
         {/* STEP 3: DONE CONFIRMATION */}
         {step === 'done' && (
           <section id="step-done" className="done" data-svc={svc}>
+            <div style={{ marginBottom: '4px' }}>
+              <FaCheckCircle
+                size={54}
+                color={svc === 'opd' ? 'var(--opd)' : 'var(--ipd)'}
+              />
+            </div>
             <h2>ଧନ୍ୟବାଦ</h2>
             <p className="en">Thank you. Your feedback helps improve the hospital.</p>
             <button
@@ -436,7 +573,10 @@ export const MobileFeedbackPage: React.FC = () => {
               id="again"
               onClick={() => startForm(otherSvc)}
             >
-              {FORMS[otherSvc].abbr} ପାଇଁ ମଧ୍ୟ ମତାମତ ଦିଅନ୍ତୁ · Also rate {FORMS[otherSvc].abbr}
+              <FaRedo size={13} />
+              <span>
+                {FORMS[otherSvc].abbr} ପାଇଁ ମଧ୍ୟ ମତାମତ ଦିଅନ୍ତୁ · Also rate {FORMS[otherSvc].abbr}
+              </span>
             </button>
           </section>
         )}
