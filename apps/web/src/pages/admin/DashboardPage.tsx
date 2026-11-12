@@ -147,54 +147,43 @@ export const DashboardPage: React.FC = () => {
         </Row>
       ) : null}
 
-      {/* OPD & IPD Quick Action & Status Cards */}
-      <Row className="g-3 mb-4">
-        <Col xs={12} sm={6}>
-          <div className="bg-white p-3 rounded border border-start border-4 border-success shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-2">
+      {/* Patient Mobile QR View Unified Banner */}
+      <div className="bg-white p-3 p-md-4 rounded border border-2 border-primary shadow-sm mb-4">
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="d-flex align-items-center gap-3">
+            <div className="p-3 bg-primary text-white rounded-circle shadow-sm flex-shrink-0">
+              <FaQrcode size={28} />
+            </div>
             <div>
               <div className="d-flex align-items-center gap-2 mb-1">
-                <span className="badge bg-success">OPD · ବହିଃ-ବିଭାଗ</span>
-                <span className="badge bg-light text-dark border">10 Questions (Odia/En)</span>
+                <span className="badge bg-primary fw-bold">ONE QR CODE</span>
+                <span className="badge bg-warning text-dark fw-bold">OPD (10 Qs) + IPD (20 Qs)</span>
+                <span className="badge bg-light text-dark border">Bilingual Odia/English</span>
               </div>
-              <h5 className="fw-bold mb-1 text-dark">Outpatient Feedback Service</h5>
-              <small className="text-muted d-block">
-                Registration, OPD Doctors, Niramaya Medicine Counter, Cleanliness
-              </small>
+              <h4 className="fw-bold mb-1 text-dark">Patient Mobile QR View (Unified OPD & IPD)</h4>
+              <p className="text-muted small mb-0">
+                Patients scan this single QR code on hospital standees. The screen asks them to choose <strong>OPD (Outpatient)</strong> or <strong>IPD (Inpatient)</strong> before presenting the questions.
+              </p>
             </div>
+          </div>
+          <div className="d-flex flex-wrap gap-2">
             <a
-              href="/feedback?type=OPD"
+              href="/feedback"
               target="_blank"
               rel="noreferrer"
-              className="btn btn-success btn-sm fw-bold px-3 py-2 shadow-sm"
+              className="btn btn-warning text-dark fw-bold px-4 py-2 shadow-sm d-flex align-items-center gap-2"
             >
-              📱 Test OPD Patient Form
+              📱 Open Patient QR View (Asks OPD or IPD)
             </a>
-          </div>
-        </Col>
-
-        <Col xs={12} sm={6}>
-          <div className="bg-white p-3 rounded border border-start border-4 border-primary shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div>
-              <div className="d-flex align-items-center gap-2 mb-1">
-                <span className="badge bg-primary">IPD · ଅନ୍ତଃ-ବିଭାଗ</span>
-                <span className="badge bg-light text-dark border">20 Questions (Odia/En)</span>
-              </div>
-              <h5 className="fw-bold mb-1 text-dark">Inpatient Ward Feedback Service</h5>
-              <small className="text-muted d-block">
-                Admission, Ward Bedsheets, Nursing Care, Food on Time, Discharge
-              </small>
-            </div>
             <a
-              href="/feedback?type=IPD"
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-primary btn-sm fw-bold px-3 py-2 shadow-sm"
+              href="/admin/services/qr-generate"
+              className="btn btn-outline-primary fw-semibold px-3 py-2"
             >
-              📱 Test IPD Patient Form
+              🖨️ Generate Standee QR
             </a>
           </div>
-        </Col>
-      </Row>
+        </div>
+      </div>
 
       {/* REAL-TIME PATIENT FEEDBACK SUBMISSIONS TABLE */}
       <div className="bg-white rounded border shadow-sm p-3 mb-4">

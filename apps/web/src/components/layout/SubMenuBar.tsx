@@ -47,24 +47,15 @@ export const SubMenuBar: React.FC = () => {
       >
         Reports & Analytics
       </NavLink>
-      <div className="ms-auto d-flex gap-1 flex-shrink-0">
+      <div className="ms-auto d-flex flex-shrink-0">
         <NavLink
-          to="/feedback?type=OPD"
+          to="/feedback"
           target="_blank"
-          className="es-sub-item bg-success text-white fw-bold rounded px-2 py-1 text-decoration-none"
-          style={{ fontSize: '0.78rem' }}
-          title="Open Outpatient Feedback Form (10 Questions)"
+          className="es-sub-item bg-warning text-dark fw-bold rounded px-3 py-1 text-decoration-none shadow-sm"
+          style={{ fontSize: '0.82rem' }}
+          title="Open Patient Mobile QR View (Choose OPD or IPD)"
         >
-          📱 OPD QR View (10 Qs)
-        </NavLink>
-        <NavLink
-          to="/feedback?type=IPD"
-          target="_blank"
-          className="es-sub-item bg-warning text-dark fw-bold rounded px-2 py-1 text-decoration-none"
-          style={{ fontSize: '0.78rem' }}
-          title="Open Inpatient Ward Feedback Form (20 Questions)"
-        >
-          📱 IPD QR View (20 Qs)
+          📱 Patient Mobile QR View
         </NavLink>
       </div>
     </div>
