@@ -151,44 +151,6 @@ export const DashboardPage: React.FC = () => {
         </Row>
       ) : null}
 
-      {/* Patient Mobile QR View Unified Banner */}
-      <div className="bg-white p-3 p-md-4 rounded border border-2 border-primary shadow-sm mb-4">
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
-          <div className="d-flex align-items-center gap-3">
-            <div className="p-3 bg-primary text-white rounded-circle shadow-sm flex-shrink-0">
-              <FaQrcode size={28} />
-            </div>
-            <div>
-              <div className="d-flex align-items-center gap-2 mb-1">
-                <span className="badge bg-primary fw-bold">ONE QR CODE</span>
-                <span className="badge bg-warning text-dark fw-bold">OPD (10 Qs) + IPD (20 Qs)</span>
-                <span className="badge bg-light text-dark border">Bilingual Odia/English</span>
-              </div>
-              <h4 className="fw-bold mb-1 text-dark">Patient Mobile QR View (Unified OPD & IPD)</h4>
-              <p className="text-muted small mb-0">
-                Patients scan this single QR code on hospital standees. The screen asks them to choose <strong>OPD (Outpatient)</strong> or <strong>IPD (Inpatient)</strong> before presenting the questions.
-              </p>
-            </div>
-          </div>
-          <div className="d-flex flex-wrap gap-2">
-            <a
-              href="/feedback"
-              target="_blank"
-              rel="noreferrer"
-              className="btn btn-warning text-dark fw-bold px-4 py-2 shadow-sm d-flex align-items-center gap-2"
-            >
-              📱 Open Patient QR View (Asks OPD or IPD)
-            </a>
-            <a
-              href="/admin/services/qr-generate"
-              className="btn btn-outline-primary fw-semibold px-3 py-2"
-            >
-              🖨️ Generate Standee QR
-            </a>
-          </div>
-        </div>
-      </div>
-
       {/* REAL-TIME PATIENT FEEDBACK SUBMISSIONS TABLE */}
       <div className="bg-white rounded border shadow-sm p-3 mb-4">
         <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
