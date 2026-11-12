@@ -30,12 +30,6 @@ export const SubMenuBar: React.FC = () => {
         Feedback Listing
       </NavLink>
       <NavLink
-        to="/admin/services/complaints"
-        className={({ isActive }) => `es-sub-item ${isActive ? 'active' : ''}`}
-      >
-        Query & Complaint Management
-      </NavLink>
-      <NavLink
         to="/admin/setup"
         className={({ isActive }) => `es-sub-item ${isActive ? 'active' : ''}`}
       >

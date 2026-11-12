@@ -68,7 +68,7 @@ export const App: React.FC = () => {
                 <Route path="services/qr-generate" element={<QrGeneratorPage />} />
                 <Route path="services/bulk-print" element={<BulkQrPrintPage />} />
                 <Route path="services/feedback-list" element={<FeedbackListPage />} />
-                <Route path="services/complaints" element={<ComplaintsPage />} />
+                <Route path="services/complaints" element={<Navigate to="/admin/services/feedback-list" replace />} />
                 <Route path="setup" element={<MastersPage />} />
                 <Route path="reports" element={<ReportsPage />} />
               </Route>

@@ -113,16 +113,18 @@ export const DashboardPage: React.FC = () => {
 
           <Col xs={12} sm={6} lg={3}>
             <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center h-100">
-              <div className="p-3 bg-warning bg-opacity-10 text-warning rounded-circle me-3 flex-shrink-0">
-                <FaClock size={24} />
+              <div className="p-3 bg-info bg-opacity-10 text-info rounded-circle me-3 flex-shrink-0">
+                <FaThumbsUp size={24} />
               </div>
               <div>
                 <small className="text-muted fw-bold text-uppercase" style={{ fontSize: '0.75rem' }}>
-                  Open Grievances
+                  OPD Submissions
                 </small>
-                <div className="fs-4 fw-bold text-warning">{reports.kpis.openComplaints}</div>
+                <div className="fs-4 fw-bold text-dark">
+                  {feedbackItems.filter((s: any) => s.patientType !== 'IPD' && s.department?.code !== 'IPD').length}
+                </div>
                 <small className="text-muted">
-                  Resolved: {reports.kpis.resolvedComplaints}
+                  Outpatient (10 Questions)
                 </small>
               </div>
             </div>
@@ -130,16 +132,18 @@ export const DashboardPage: React.FC = () => {
 
           <Col xs={12} sm={6} lg={3}>
             <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center h-100">
-              <div className="p-3 bg-danger bg-opacity-10 text-danger rounded-circle me-3 flex-shrink-0">
-                <FaExclamationTriangle size={24} />
+              <div className="p-3 bg-primary bg-opacity-10 text-primary rounded-circle me-3 flex-shrink-0">
+                <FaThumbsUp size={24} />
               </div>
               <div>
                 <small className="text-muted fw-bold text-uppercase" style={{ fontSize: '0.75rem' }}>
-                  SLA Escalated
+                  IPD Submissions
                 </small>
-                <div className="fs-4 fw-bold text-danger">{reports.kpis.escalatedComplaints}</div>
-                <small className="text-danger fw-semibold">
-                  Low Rating Alerts: {reports.lowRatingAlerts.length}
+                <div className="fs-4 fw-bold text-primary">
+                  {feedbackItems.filter((s: any) => s.patientType === 'IPD' || s.department?.code === 'IPD').length}
+                </div>
+                <small className="text-muted">
+                  Inpatient Wards (20 Questions)
                 </small>
               </div>
             </div>
@@ -323,11 +327,9 @@ export const DashboardPage: React.FC = () => {
               description="Filter by OPD (10 Qs) & IPD (20 Qs), view ratings & patient details"
             />
             <MenuRow
-              title="Query & Complaint Management"
-              to="/admin/services/complaints"
-              badge={reports?.kpis?.openComplaints ?? '2'}
-              badgeBg="danger"
-              description="Manage OPD & IPD patient grievances, assign officers & track SLA"
+              title="Patient Mobile QR Form (Live)"
+              to="/feedback"
+              description="Direct preview of OPD (10 Qs) and IPD (20 Qs) patient mobile interface"
             />
           </MenuCard>
         </Col>
@@ -344,11 +346,6 @@ export const DashboardPage: React.FC = () => {
               title="Service Category Master"
               to="/admin/setup"
               description="OPD Consultation & Counters, IPD Inpatient Wards & Specialties"
-            />
-            <MenuRow
-              title="Escalation Matrix (SLA)"
-              to="/admin/setup"
-              description="Multi-tier SLA hours for OPD (24h) & IPD (12h) with auto-escalation"
             />
             <MenuRow
               title="QR Location Master"
@@ -372,16 +369,11 @@ export const DashboardPage: React.FC = () => {
               description="Star rating performance breakdown across OPD & IPD question touchpoints"
             />
             <MenuRow
-              title="Complaint Status & SLA Escalations"
-              to="/admin/reports"
-              description="Open, In Progress, Resolved, Escalated and Closed grievance tracking"
-            />
-            <MenuRow
               title="Low Rating Alerts (≤ 2 Stars)"
               to="/admin/reports"
               badge={reports?.lowRatingAlerts?.length ?? '1'}
               badgeBg="danger"
-              description="Automatic alerts dispatched to OPD/IPD heads for urgent redressal"
+              description="Automatic alerts for OPD & IPD feedback with 1 or 2 stars"
             />
             <MenuRow
               title="NPS Trend & Excel / PDF Export"

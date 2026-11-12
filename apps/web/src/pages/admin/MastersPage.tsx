@@ -256,62 +256,7 @@ export const MastersPage: React.FC = () => {
               </div>
             </Tab>
 
-            {/* TAB 3: ESCALATION MATRIX */}
-            <Tab
-              eventKey="escalation"
-              title={
-                <span>
-                  <FaLevelUpAlt className="me-1" /> Escalation Matrix ({escalations.length})
-                </span>
-              }
-            >
-              <div className="table-responsive">
-                <Table hover className="align-middle">
-                  <thead className="table-light small text-uppercase">
-                    <tr>
-                      <th>Department</th>
-                      <th>Escalation Level</th>
-                      <th>SLA Target</th>
-                      <th>Designated Officer</th>
-                      <th>Designation / Role</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loadingEscalations ? (
-                      <tr>
-                        <td colSpan={6} className="text-center py-4 text-muted">
-                          Loading escalation matrix...
-                        </td>
-                      </tr>
-                    ) : (
-                      escalations.map((e: any) => (
-                        <tr key={e.id}>
-                          <td className="fw-bold text-primary">{e.department?.name}</td>
-                          <td>
-                            <Badge bg="warning" text="dark">
-                              Level {e.level}
-                            </Badge>
-                          </td>
-                          <td className="fw-bold">{e.slaHours} Hours</td>
-                          <td className="fw-semibold">{e.escalateToUser?.fullName}</td>
-                          <td>
-                            <Badge bg="info">{e.escalateToUser?.role}</Badge>
-                          </td>
-                          <td>
-                            <Badge bg={e.isActive ? 'success' : 'secondary'}>
-                              {e.isActive ? 'Enforced' : 'Disabled'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </Table>
-              </div>
-            </Tab>
-
-            {/* TAB 4: QR LOCATIONS */}
+            {/* TAB 3: QR LOCATIONS */}
             <Tab
               eventKey="locations"
               title={
