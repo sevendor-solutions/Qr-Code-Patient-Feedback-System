@@ -25,9 +25,16 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = (user: string, pass: string) => {
+  const handleQuickLogin = async (user: string, pass: string) => {
     setUsername(user);
     setPassword(pass);
+    setErrorMsg(null);
+    try {
+      await login(user, pass);
+      navigate('/admin');
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.message || 'Login failed. Please verify your credentials.');
+    }
   };
 
   return (
@@ -45,17 +52,25 @@ export const LoginPage: React.FC = () => {
           <div
             className="p-4 text-center text-white"
             style={{
-              background: 'linear-gradient(135deg, #1E6FD9 0%, #1565C0 100%)',
+              background: 'linear-gradient(135deg, #1565C0 0%, #0D47A1 100%)',
             }}
           >
-            <FaHospitalSymbol size={42} className="mb-2 text-warning" />
-            <h1 className="h3 fw-bold mb-0">
-              eSushrut <span style={{ color: '#C6E85A' }}>G5</span>
+            <div
+              className="d-inline-flex align-items-center justify-content-center bg-warning text-dark rounded-circle mb-2 shadow-sm"
+              style={{ width: '48px', height: '48px', fontSize: '24px', fontWeight: '900' }}
+            >
+              H
+            </div>
+            <h1 className="h3 fw-bold mb-1" style={{ letterSpacing: '0.5px' }}>
+              DHH KATAKA
             </h1>
-            <p className="small mb-0 opacity-90">
-              Centre for Development of Advanced Computing (C-DAC)
+            <p className="small mb-1 opacity-90 fw-semibold">
+              District Head Hospital
             </p>
-            <div className="badge bg-white text-primary mt-2 fw-bold">
+            <div className="small text-white-50 mb-2" style={{ fontSize: '0.8rem' }}>
+              ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ
+            </div>
+            <div className="badge bg-white text-primary mt-1 fw-bold px-3 py-1 shadow-sm">
               Feedback & Grievance Administration
             </div>
           </div>
@@ -107,7 +122,7 @@ export const LoginPage: React.FC = () => {
                 disabled={loading}
               >
                 {loading ? <Spinner size="sm" className="me-2" /> : null}
-                Sign In to eSushrut Portal
+                Sign In to DHH Kataka Portal
               </Button>
             </Form>
 

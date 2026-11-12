@@ -41,7 +41,7 @@ export class ReportsController {
     );
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="esushrut-feedback-report.xlsx"',
+      'attachment; filename="dhh-kataka-feedback-report.xlsx"',
     );
     res.status(HttpStatus.OK).send(buffer);
   }
@@ -53,7 +53,7 @@ export class ReportsController {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="esushrut-quality-report.pdf"',
+      'attachment; filename="dhh-kataka-quality-report.pdf"',
     );
     res.status(HttpStatus.OK).send(buffer);
   }

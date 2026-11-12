@@ -206,7 +206,7 @@ export class ReportsService {
   async exportExcel(filters: any): Promise<Buffer> {
     const summary = await this.getReportsSummary(filters);
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'C-DAC eSushrut G5';
+    workbook.creator = 'DHH KATAKA - District Head Hospital';
     workbook.created = new Date();
 
     // Sheet 1: Department Summary
@@ -286,11 +286,11 @@ export class ReportsService {
         // Header
         doc.rect(20, 20, doc.page.width - 40, 60).fillColor('#1565C0').fill();
         doc.fillColor('#FFFFFF').fontSize(18).font('Helvetica-Bold');
-        doc.text('eSushrut G5 - Executive Feedback & SLA Quality Audit Report', 30, 32, {
+        doc.text('DHH KATAKA - Executive Feedback & SLA Quality Audit Report', 30, 32, {
           align: 'center',
         });
         doc.fontSize(10).font('Helvetica').fillColor('#C6E85A');
-        doc.text('Centre for Development of Advanced Computing (C-DAC)', 30, 56, {
+        doc.text('District Head Hospital, Cuttack (DHH KATAKA) · Government of Odisha', 30, 56, {
           align: 'center',
         });
 
@@ -355,7 +355,7 @@ export class ReportsService {
         doc.rect(20, doc.page.height - 45, doc.page.width - 40, 25).fillColor('#1565C0').fill();
         doc.fillColor('#FFFFFF').fontSize(8).font('Helvetica');
         doc.text(
-          '© Centre for Development of Advanced Computing (C-DAC) - Confidential Government Hospital Report',
+          '© DHH KATAKA - District Head Hospital (Cuttack) - Official Hospital Quality Audit Report',
           30,
           doc.page.height - 35,
           { align: 'center' },

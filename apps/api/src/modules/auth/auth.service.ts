@@ -30,19 +30,27 @@ export class AuthService implements OnModuleInit {
       if (!hospital) {
         hospital = await this.prisma.hospital.create({
           data: {
-            code: 'ESUSHRUT-CENTRAL',
-            name: 'eSushrut Model Civil & Teaching Hospital',
-            address: 'Central Medical Enclave, Health City, New Delhi - 110001',
-            contactEmail: 'nodal.grievance@esushrut-cdac.in',
-            contactPhone: '011-26598700',
+            code: 'DHH-KATAKA',
+            name: 'DHH KATAKA - District Head Hospital',
+            address: 'District Headquarters Hospital, Cuttack, Odisha - 753001',
+            contactEmail: 'nodal.grievance@dhhkataka.gov.in',
+            contactPhone: '0671-2300000',
             logoUrl: '/cdac-logo.svg',
             isActive: true,
             createdBy: 'SYSTEM_INSTALLER',
           },
         });
+      } else {
+        hospital = await this.prisma.hospital.update({
+          where: { id: hospital.id },
+          data: {
+            name: 'DHH KATAKA - District Head Hospital',
+            address: 'District Headquarters Hospital, Cuttack, Odisha - 753001',
+          },
+        });
       }
 
-      // 2. Ensure OPD department exists
+      // 2. Ensure OPD and IPD departments exist
       let opdDept = await this.prisma.department.findFirst({
         where: { hospitalId: hospital.id, code: 'OPD' },
       });
@@ -51,10 +59,27 @@ export class AuthService implements OnModuleInit {
           data: {
             hospitalId: hospital.id,
             code: 'OPD',
-            name: 'Outpatient Department (OPD)',
+            name: 'Outpatient Department (OPD) · ବହିଃ-ବିଭାଗ',
             headName: 'Dr. Rajesh Sharma',
             headEmail: 'rajesh.sharma@hospital.gov.in',
             headPhone: '9811223344',
+            createdBy: 'SYSTEM_INSTALLER',
+          },
+        });
+      }
+
+      let ipdDept = await this.prisma.department.findFirst({
+        where: { hospitalId: hospital.id, code: 'IPD' },
+      });
+      if (!ipdDept) {
+        ipdDept = await this.prisma.department.create({
+          data: {
+            hospitalId: hospital.id,
+            code: 'IPD',
+            name: 'Inpatient Department (IPD) · ଅନ୍ତଃ-ବିଭାଗ Wards',
+            headName: 'Dr. K. S. Rao',
+            headEmail: 'ks.rao@hospital.gov.in',
+            headPhone: '9833445566',
             createdBy: 'SYSTEM_INSTALLER',
           },
         });

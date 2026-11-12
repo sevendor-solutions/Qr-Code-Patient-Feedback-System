@@ -16,15 +16,15 @@ async function main() {
   console.log('--- Checking & Initializing eSushrut G5 Database State ---');
 
   // 1. Create or Find Hospital
-  let hospital = await prisma.hospital.findUnique({ where: { code: 'ESUSHRUT-CENTRAL' } });
+  let hospital = await prisma.hospital.findFirst();
   if (!hospital) {
     hospital = await prisma.hospital.create({
       data: {
-        code: 'ESUSHRUT-CENTRAL',
-        name: 'eSushrut Model Civil & Teaching Hospital',
-        address: 'Central Medical Enclave, Health City, New Delhi - 110001',
-        contactEmail: 'nodal.grievance@esushrut-cdac.in',
-        contactPhone: '011-26598700',
+        code: 'DHH-KATAKA',
+        name: 'DHH KATAKA - District Head Hospital',
+        address: 'District Headquarters Hospital, Cuttack, Odisha - 753001',
+        contactEmail: 'nodal.grievance@dhhkataka.gov.in',
+        contactPhone: '0671-2300000',
         logoUrl: '/cdac-logo.svg',
         isActive: true,
         createdBy: 'SYSTEM_INSTALLER',
@@ -32,7 +32,14 @@ async function main() {
     });
     console.log(`Created Hospital: ${hospital.name}`);
   } else {
-    console.log(`Using existing Hospital: ${hospital.name}`);
+    hospital = await prisma.hospital.update({
+      where: { id: hospital.id },
+      data: {
+        name: 'DHH KATAKA - District Head Hospital',
+        address: 'District Headquarters Hospital, Cuttack, Odisha - 753001',
+      },
+    });
+    console.log(`Updated Hospital: ${hospital.name}`);
   }
 
   // 2. Create Departments

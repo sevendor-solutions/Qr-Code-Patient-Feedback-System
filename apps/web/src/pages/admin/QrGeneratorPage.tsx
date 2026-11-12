@@ -31,6 +31,7 @@ export const QrGeneratorPage: React.FC = () => {
   // Form State
   const [selectedHospital, setSelectedHospital] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
+  const [serviceType, setServiceType] = useState<'OPD' | 'IPD'>('OPD');
   const [selectedLoc, setSelectedLoc] = useState('');
   const [counterName, setCounterName] = useState('');
   const [copied, setCopied] = useState(false);
@@ -78,26 +79,58 @@ export const QrGeneratorPage: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid py-4 px-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <div className="container-fluid py-4 px-2 px-md-4">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-          <h1 className="h4 fw-bold text-dark mb-0">Generate Department QR Codes</h1>
+          <h1 className="h4 fw-bold text-dark mb-0">DHH KATAKA · Generate Patient Feedback QR Codes</h1>
           <small className="text-muted">
-            Create tamper-proof HMAC-secured QR Codes for patient counters & wards
+            Create secured HMAC QR Codes for OPD (Outpatient - 10 Qs) & IPD (Inpatient - 20 Qs) counters & wards
           </small>
         </div>
+        <div className="badge bg-primary px-3 py-2">District Head Hospital, Cuttack</div>
       </div>
 
       <Row className="g-4">
         {/* Form Column */}
-        <Col lg={6}>
+        <Col xs={12} lg={6}>
           <Card className="es-card">
             <div className="es-card-header">
               <FaQrcode className="text-primary me-2" />
               <h2 className="es-card-title h6 mb-0">QR Code Parameters</h2>
             </div>
-            <Card.Body>
+            <Card.Body className="p-3 p-md-4">
               <Form onSubmit={handleGenerate}>
+                {/* Service Type Selection */}
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-bold small d-block">Patient Feedback Service Type</Form.Label>
+                  <div className="btn-group w-100" role="group">
+                    <button
+                      type="button"
+                      className={`btn ${serviceType === 'OPD' ? 'btn-teal text-white' : 'btn-outline-secondary'}`}
+                      style={{ backgroundColor: serviceType === 'OPD' ? '#0f766e' : undefined }}
+                      onClick={() => {
+                        setServiceType('OPD');
+                        const opdDept = departments.find((d: any) => d.code === 'OPD');
+                        if (opdDept) setSelectedDept(opdDept.id);
+                      }}
+                    >
+                      <strong>OPD</strong> · ବହିଃ-ବିଭାଗ (10 Questions)
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${serviceType === 'IPD' ? 'btn-primary text-white' : 'btn-outline-secondary'}`}
+                      style={{ backgroundColor: serviceType === 'IPD' ? '#4338ca' : undefined }}
+                      onClick={() => {
+                        setServiceType('IPD');
+                        const ipdDept = departments.find((d: any) => d.code === 'IPD');
+                        if (ipdDept) setSelectedDept(ipdDept.id);
+                      }}
+                    >
+                      <strong>IPD</strong> · ଅନ୍ତଃ-ବିଭାଗ (20 Questions)
+                    </button>
+                  </div>
+                </Form.Group>
+
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-bold small">Hospital</Form.Label>
                   <Form.Select
@@ -114,7 +147,7 @@ export const QrGeneratorPage: React.FC = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-bold small">Hospital Department</Form.Label>
+                  <Form.Label className="fw-bold small">Department / Unit</Form.Label>
                   <Form.Select
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(e.target.value)}
@@ -136,7 +169,7 @@ export const QrGeneratorPage: React.FC = () => {
                     value={selectedLoc}
                     onChange={(e) => setSelectedLoc(e.target.value)}
                   >
-                    <option value="">-- Main Department Standee --</option>
+                    <option value="">-- Main Standee ({serviceType}) --</option>
                     {locations
                       .filter((l: any) => !selectedDept || l.departmentId === selectedDept)
                       .map((loc: any) => (
@@ -151,10 +184,30 @@ export const QrGeneratorPage: React.FC = () => {
                   <Form.Label className="fw-semibold small">Counter Label / Notes</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="e.g. Counter 3 - Blood Collection Desk"
+                    placeholder={
+                      serviceType === 'OPD'
+                        ? 'e.g. OPD Registration Desk / Room 4'
+                        : 'e.g. Female Medical Ward - Bedside Standee'
+                    }
                     value={counterName}
                     onChange={(e) => setCounterName(e.target.value)}
                   />
+                  {/* Quick suggestion tags */}
+                  <div className="d-flex flex-wrap gap-1 mt-2">
+                    {(serviceType === 'OPD'
+                      ? ['Registration Desk', 'Consultation Chamber', 'Niramaya Pharmacy', 'Lab / X-Ray', 'Waiting Hall']
+                      : ['General Ward', 'Female Ward', 'Maternity Ward', 'Pediatric Ward', 'ICU', 'Special Cabin']
+                    ).map((tag) => (
+                      <span
+                        key={tag}
+                        className="badge bg-light text-dark border cursor-pointer"
+                        style={{ cursor: 'pointer', fontSize: '0.75rem' }}
+                        onClick={() => setCounterName(tag)}
+                      >
+                        + {tag}
+                      </span>
+                    ))}
+                  </div>
                 </Form.Group>
 
                 <Button
@@ -168,7 +221,7 @@ export const QrGeneratorPage: React.FC = () => {
                   ) : (
                     <FaQrcode className="me-2" />
                   )}
-                  Generate Secure QR Code
+                  Generate Secure {serviceType} QR Code
                 </Button>
               </Form>
 
@@ -183,25 +236,37 @@ export const QrGeneratorPage: React.FC = () => {
         </Col>
 
         {/* Preview Column */}
-        <Col lg={6}>
+        <Col xs={12} lg={6}>
           <Card className="es-card text-center">
             <div className="es-card-header justify-content-center">
-              <h2 className="es-card-title h6 mb-0">QR Code Live Preview</h2>
+              <h2 className="es-card-title h6 mb-0">DHH KATAKA · Standee Live Preview</h2>
             </div>
-            <Card.Body className="d-flex flex-column align-items-center justify-content-center p-4">
+            <Card.Body className="d-flex flex-column align-items-center justify-content-center p-3 p-md-4">
               {generatedResult ? (
-                <div>
-                  <div className="p-3 bg-light border rounded-3 mb-3 d-inline-block shadow-sm">
+                <div style={{ maxWidth: '320px', width: '100%' }}>
+                  <div className="p-3 bg-white border border-2 border-primary rounded-3 mb-3 shadow-sm text-center">
+                    <div className="bg-primary text-white p-2 rounded mb-2">
+                      <div className="fw-bold fs-6">DHH KATAKA</div>
+                      <div style={{ fontSize: '0.72rem' }}>District Head Hospital · କଟକ</div>
+                      <div className="badge bg-warning text-dark mt-1" style={{ fontSize: '0.7rem' }}>
+                        {serviceType === 'OPD' ? 'OPD (ବହିଃ-ବିଭାଗ 10 Qs)' : 'IPD (ଅନ୍ତଃ-ବିଭାଗ 20 Qs)'}
+                      </div>
+                    </div>
+
                     <img
                       src={generatedResult.qrDataUrl}
                       alt="Generated QR Code"
-                      style={{ width: '220px', height: '220px' }}
+                      style={{ width: '180px', height: '180px' }}
+                      className="border p-1 bg-light rounded"
                     />
+
+                    <div className="small fw-bold text-dark mt-2">
+                      {counterName || (serviceType === 'OPD' ? 'OPD Main Counter' : 'Inpatient Ward')}
+                    </div>
+                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+                      Scan using any smartphone camera
+                    </div>
                   </div>
-                  <h3 className="h6 fw-bold text-primary mb-1">{generatedResult.code}</h3>
-                  <small className="text-muted d-block mb-3">
-                    Target: {generatedResult.department?.name}
-                  </small>
 
                   <div className="p-2 bg-light rounded border text-break small mb-3 text-start">
                     <strong>URL: </strong>
@@ -215,7 +280,7 @@ export const QrGeneratorPage: React.FC = () => {
                     </a>
                   </div>
 
-                  <div className="d-flex gap-2 justify-content-center">
+                  <div className="d-flex flex-wrap gap-2 justify-content-center">
                     <Button
                       variant="outline-primary"
                       size="sm"
@@ -226,7 +291,7 @@ export const QrGeneratorPage: React.FC = () => {
                     </Button>
                     <a
                       href={generatedResult.qrDataUrl}
-                      download={`${generatedResult.code}.png`}
+                      download={`DHH-KATAKA-${serviceType}-${generatedResult.code}.png`}
                       className="btn btn-primary btn-sm"
                     >
                       <FaDownload className="me-1" /> Download PNG
@@ -237,14 +302,14 @@ export const QrGeneratorPage: React.FC = () => {
                       rel="noreferrer"
                       className="btn btn-outline-secondary btn-sm"
                     >
-                      <FaExternalLinkAlt className="me-1" /> Test Link
+                      <FaExternalLinkAlt className="me-1" /> Test Form
                     </a>
                   </div>
                 </div>
               ) : (
                 <div className="py-5 text-muted">
                   <FaQrcode size={64} className="opacity-25 mb-3" />
-                  <p className="mb-0">Select hospital parameters and click "Generate Secure QR Code" to preview.</p>
+                  <p className="mb-0">Choose OPD or IPD parameters and click "Generate Secure QR Code" to preview.</p>
                 </div>
               )}
             </Card.Body>

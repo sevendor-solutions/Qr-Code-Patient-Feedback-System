@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { Row, Col, Spinner, Alert, Button, Badge } from 'react-bootstrap';
 import { apiClient } from '../../api/client';
 import { MenuCard } from '../../components/common/MenuCard';
 import { MenuRow } from '../../components/common/MenuRow';
@@ -16,9 +17,14 @@ import {
   FaThumbsUp,
   FaFileAlt,
   FaMapMarkerAlt,
+  FaMobileAlt,
+  FaEye,
+  FaStar,
 } from 'react-icons/fa';
 
 export const DashboardPage: React.FC = () => {
+  const [dashboardStream, setDashboardStream] = useState<'ALL' | 'OPD' | 'IPD'>('ALL');
+
   const { data: reports, isLoading, error } = useQuery({
     queryKey: ['reports-summary'],
     queryFn: async () => {
@@ -27,18 +33,36 @@ export const DashboardPage: React.FC = () => {
     },
   });
 
+  const { data: recentFeedbacks, isLoading: loadingFeedbacks } = useQuery({
+    queryKey: ['dashboard-recent-feedbacks'],
+    queryFn: async () => {
+      const res = await apiClient.get('/feedback?limit=8');
+      return res.data;
+    },
+  });
+
+  const feedbackItems: any[] = recentFeedbacks?.items || [];
+  const filteredFeedbacks =
+    dashboardStream === 'ALL'
+      ? feedbackItems
+      : feedbackItems.filter((f: any) =>
+          dashboardStream === 'IPD'
+            ? f.patientType === 'IPD' || f.department?.code === 'IPD' || (f.answers && Object.keys(f.answers).length > 10)
+            : f.patientType === 'OPD' || f.department?.code === 'OPD' || !f.patientType
+        );
+
   return (
     <div className="container-fluid py-4 px-4">
       {/* Page Title & Breadcrumb */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-          <h1 className="h4 fw-bold text-dark mb-0">Patient Feedback & Grievance Monitoring System</h1>
+          <h1 className="h4 fw-bold text-dark mb-0">DHH KATAKA · Patient Feedback & Grievance System</h1>
           <small className="text-muted">
-            eSushrut G5 Module | Centre for Development of Advanced Computing (C-DAC)
+            District Head Hospital (ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ) | Government of Odisha
           </small>
         </div>
         <div className="badge bg-primary px-3 py-2 fs-6">
-          eSushrut G5 Release
+          DHH KATAKA PORTAL
         </div>
       </div>
 
@@ -53,9 +77,9 @@ export const DashboardPage: React.FC = () => {
         </Alert>
       ) : reports?.kpis ? (
         <Row className="g-3 mb-4">
-          <Col md={3} sm={6}>
-            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center">
-              <div className="p-3 bg-primary bg-opacity-10 text-primary rounded-circle me-3">
+          <Col xs={12} sm={6} lg={3}>
+            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center h-100">
+              <div className="p-3 bg-primary bg-opacity-10 text-primary rounded-circle me-3 flex-shrink-0">
                 <FaThumbsUp size={24} />
               </div>
               <div>
@@ -70,9 +94,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </Col>
 
-          <Col md={3} sm={6}>
-            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center">
-              <div className="p-3 bg-success bg-opacity-10 text-success rounded-circle me-3">
+          <Col xs={12} sm={6} lg={3}>
+            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center h-100">
+              <div className="p-3 bg-success bg-opacity-10 text-success rounded-circle me-3 flex-shrink-0">
                 <FaChartBar size={24} />
               </div>
               <div>
@@ -87,9 +111,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </Col>
 
-          <Col md={3} sm={6}>
-            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center">
-              <div className="p-3 bg-warning bg-opacity-10 text-warning rounded-circle me-3">
+          <Col xs={12} sm={6} lg={3}>
+            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center h-100">
+              <div className="p-3 bg-warning bg-opacity-10 text-warning rounded-circle me-3 flex-shrink-0">
                 <FaClock size={24} />
               </div>
               <div>
@@ -104,9 +128,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </Col>
 
-          <Col md={3} sm={6}>
-            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center">
-              <div className="p-3 bg-danger bg-opacity-10 text-danger rounded-circle me-3">
+          <Col xs={12} sm={6} lg={3}>
+            <div className="bg-white p-3 rounded border shadow-sm d-flex align-items-center h-100">
+              <div className="p-3 bg-danger bg-opacity-10 text-danger rounded-circle me-3 flex-shrink-0">
                 <FaExclamationTriangle size={24} />
               </div>
               <div>
@@ -123,76 +147,240 @@ export const DashboardPage: React.FC = () => {
         </Row>
       ) : null}
 
+      {/* OPD & IPD Quick Action & Status Cards */}
+      <Row className="g-3 mb-4">
+        <Col xs={12} sm={6}>
+          <div className="bg-white p-3 rounded border border-start border-4 border-success shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-1">
+                <span className="badge bg-success">OPD · ବହିଃ-ବିଭାଗ</span>
+                <span className="badge bg-light text-dark border">10 Questions (Odia/En)</span>
+              </div>
+              <h5 className="fw-bold mb-1 text-dark">Outpatient Feedback Service</h5>
+              <small className="text-muted d-block">
+                Registration, OPD Doctors, Niramaya Medicine Counter, Cleanliness
+              </small>
+            </div>
+            <a
+              href="/feedback?type=OPD"
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-success btn-sm fw-bold px-3 py-2 shadow-sm"
+            >
+              📱 Test OPD Patient Form
+            </a>
+          </div>
+        </Col>
+
+        <Col xs={12} sm={6}>
+          <div className="bg-white p-3 rounded border border-start border-4 border-primary shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-1">
+                <span className="badge bg-primary">IPD · ଅନ୍ତଃ-ବିଭାଗ</span>
+                <span className="badge bg-light text-dark border">20 Questions (Odia/En)</span>
+              </div>
+              <h5 className="fw-bold mb-1 text-dark">Inpatient Ward Feedback Service</h5>
+              <small className="text-muted d-block">
+                Admission, Ward Bedsheets, Nursing Care, Food on Time, Discharge
+              </small>
+            </div>
+            <a
+              href="/feedback?type=IPD"
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-primary btn-sm fw-bold px-3 py-2 shadow-sm"
+            >
+              📱 Test IPD Patient Form
+            </a>
+          </div>
+        </Col>
+      </Row>
+
+      {/* REAL-TIME PATIENT FEEDBACK SUBMISSIONS TABLE */}
+      <div className="bg-white rounded border shadow-sm p-3 mb-4">
+        <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+          <div>
+            <h5 className="fw-bold mb-0 text-dark">
+              Recent Patient Feedback Submissions · ଡାକ୍ତରଖାନା ମତାମତ
+            </h5>
+            <small className="text-muted">
+              Live feedback from patient smartphone QR code scans across DHH KATAKA counters & wards
+            </small>
+          </div>
+          <div className="d-flex flex-wrap gap-2">
+            <button
+              className={`btn btn-sm ${dashboardStream === 'ALL' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setDashboardStream('ALL')}
+            >
+              All Streams ({feedbackItems.length})
+            </button>
+            <button
+              className={`btn btn-sm ${dashboardStream === 'OPD' ? 'btn-success' : 'btn-outline-success'}`}
+              onClick={() => setDashboardStream('OPD')}
+            >
+              OPD Feedbacks (10 Qs)
+            </button>
+            <button
+              className={`btn btn-sm ${dashboardStream === 'IPD' ? 'btn-primary' : 'btn-outline-primary'}`}
+              onClick={() => setDashboardStream('IPD')}
+            >
+              IPD Ward Feedbacks (20 Qs)
+            </button>
+            <Link to="/admin/services/feedback-list" className="btn btn-sm btn-outline-primary">
+              Full Feedback Master →
+            </Link>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-light small text-uppercase">
+              <tr>
+                <th>Date & Time</th>
+                <th>Stream / Service</th>
+                <th>Patient / Mobile</th>
+                <th>Department / Unit</th>
+                <th>Rating (Stars)</th>
+                <th>NPS</th>
+                <th>Remarks / Comments</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingFeedbacks ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-4 text-muted">
+                    <Spinner size="sm" className="me-2" /> Loading recent patient feedback submissions...
+                  </td>
+                </tr>
+              ) : filteredFeedbacks.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-4 text-muted">
+                    No feedback records yet for {dashboardStream}. Click <strong>"📱 Test OPD Patient Form"</strong> or <strong>"📱 Test IPD Patient Form"</strong> above to submit a live sample feedback!
+                  </td>
+                </tr>
+              ) : (
+                filteredFeedbacks.map((f: any) => (
+                  <tr key={f.id}>
+                    <td>
+                      <div className="fw-semibold">{new Date(f.createdAt).toLocaleDateString()}</div>
+                      <small className="text-muted">
+                        {new Date(f.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </small>
+                    </td>
+                    <td>
+                      {f.patientType === 'IPD' || f.department?.code === 'IPD' || (f.answers && Object.keys(f.answers).length > 10) ? (
+                        <Badge bg="primary">IPD (ଅନ୍ତଃ-ବିଭାଗ)</Badge>
+                      ) : (
+                        <Badge bg="success">OPD (ବହିଃ-ବିଭାଗ)</Badge>
+                      )}
+                    </td>
+                    <td>
+                      <div className="fw-semibold">{f.patientName || 'Anonymous Citizen'}</div>
+                      <small className="font-monospace text-muted">{f.mobile}</small>
+                      {f.crNumber && <Badge bg="light" text="dark" className="ms-1 border">{f.crNumber}</Badge>}
+                    </td>
+                    <td>
+                      <span className="fw-semibold text-primary">{f.department?.name}</span>
+                      {f.location && <small className="text-muted d-block">{f.location.name}</small>}
+                    </td>
+                    <td>
+                      <div className="d-flex align-items-center">
+                        <FaStar className="text-warning me-1" size={14} />
+                        <strong className="me-1">{f.overallEmoji}</strong> / 5
+                      </div>
+                    </td>
+                    <td>
+                      <Badge bg={f.npsScore >= 9 ? 'success' : f.npsScore >= 7 ? 'warning' : 'danger'}>
+                        {f.npsScore} / 10
+                      </Badge>
+                    </td>
+                    <td style={{ maxWidth: '220px' }} className="text-truncate">
+                      <small className="text-muted">{f.comments || 'No remarks provided'}</small>
+                    </td>
+                    <td>
+                      <Link to="/admin/services/feedback-list" className="btn btn-outline-primary btn-sm py-0">
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* 3-CARD ADMIN LAYOUT (SERVICES, SETUP, REPORTS) */}
       <Row className="g-4">
         {/* CARD 1: SERVICES */}
-        <Col lg={4} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <MenuCard title="Services" icon={<FaQrcode />}>
             <MenuRow
               title="Generate QR Code"
               to="/admin/services/qr-generate"
-              description="Create secured HMAC QR standees for hospital, wards & counters"
+              description="Create secured HMAC QR standees for OPD counters & IPD wards"
             />
             <MenuRow
               title="Bulk QR Print (A4)"
               to="/admin/services/bulk-print"
-              description="Download multi-page PDF with Telugu/Hindi signage for department display"
+              description="Download multi-page PDF with DHH KATAKA Odia & English signage"
             />
             <MenuRow
               title="Feedback Listing"
               to="/admin/services/feedback-list"
               badge={reports?.kpis?.totalFeedbacks ?? '5'}
               badgeBg="primary"
-              description="Search, filter, view ratings & masked patient contact logs"
+              description="Filter by OPD (10 Qs) & IPD (20 Qs), view ratings & patient details"
             />
             <MenuRow
               title="Query & Complaint Management"
               to="/admin/services/complaints"
               badge={reports?.kpis?.openComplaints ?? '2'}
               badgeBg="danger"
-              description="Assign grievance officers, update ticket status, SLA remarks"
+              description="Manage OPD & IPD patient grievances, assign officers & track SLA"
             />
           </MenuCard>
         </Col>
 
         {/* CARD 2: SETUP */}
-        <Col lg={4} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <MenuCard title="Setup" icon={<FaCogs />}>
             <MenuRow
               title="Feedback Question Master"
               to="/admin/setup"
-              description="Configure 9 rating questions in English, Telugu and Hindi"
+              description="10 OPD & 20 IPD questions in Odia (ଓଡ଼ିଆ) and English"
             />
             <MenuRow
               title="Service Category Master"
               to="/admin/setup"
-              description="OPD, IPD, Emergency, Lab, Pharmacy, Billing, Sanitation, Parking"
+              description="OPD Consultation & Counters, IPD Inpatient Wards & Specialties"
             />
             <MenuRow
               title="Escalation Matrix (SLA)"
               to="/admin/setup"
-              description="Define multi-tier SLA hours, designated nodal officers and auto-escalation"
+              description="Multi-tier SLA hours for OPD (24h) & IPD (12h) with auto-escalation"
             />
             <MenuRow
               title="QR Location Master"
               to="/admin/setup"
-              description="Manage hospital buildings, floors, wards, and counter desks"
+              description="DHH KATAKA buildings, OPD blocks, IPD wards, and counter desks"
             />
           </MenuCard>
         </Col>
 
         {/* CARD 3: REPORTS */}
-        <Col lg={4} md={12}>
+        <Col xs={12} md={12} lg={4}>
           <MenuCard title="Reports" icon={<FaChartBar />}>
             <MenuRow
-              title="Department Wise Feedback Summary"
+              title="OPD & IPD Feedback Summary"
               to="/admin/reports"
-              description="Comparative rating score & feedback volume across departments"
+              description="Comparative rating score & feedback volume across OPD & IPD"
             />
             <MenuRow
               title="Service Wise Satisfaction Score"
               to="/admin/reports"
-              description="Star rating performance breakdown across 9 key hospital touchpoints"
+              description="Star rating performance breakdown across OPD & IPD question touchpoints"
             />
             <MenuRow
               title="Complaint Status & SLA Escalations"
@@ -204,7 +392,7 @@ export const DashboardPage: React.FC = () => {
               to="/admin/reports"
               badge={reports?.lowRatingAlerts?.length ?? '1'}
               badgeBg="danger"
-              description="Automatic alerts dispatched to department heads for urgent redressal"
+              description="Automatic alerts dispatched to OPD/IPD heads for urgent redressal"
             />
             <MenuRow
               title="NPS Trend & Excel / PDF Export"

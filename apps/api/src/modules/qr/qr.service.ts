@@ -169,8 +169,8 @@ export class QrService {
           size: 'A4',
           margin: 40,
           info: {
-            Title: `eSushrut G5 - QR Standees - ${hospital.name}`,
-            Author: 'Centre for Development of Advanced Computing (C-DAC)',
+            Title: `DHH KATAKA - QR Standees - ${hospital.name}`,
+            Author: 'District Head Hospital, Cuttack (DHH KATAKA)',
           },
         });
 
@@ -204,13 +204,13 @@ export class QrService {
           doc.rect(28, 28, doc.page.width - 56, 90).fillColor('#1565C0').fill();
 
           doc.fillColor('#FFFFFF').fontSize(22).font('Helvetica-Bold');
-          doc.text('eSushrut G5', 40, 42, { align: 'center' });
+          doc.text('DHH KATAKA', 40, 42, { align: 'center' });
 
           doc.fontSize(12).font('Helvetica');
-          doc.text('Hospital Management & Information System', 40, 70, { align: 'center' });
+          doc.text('District Head Hospital (Cuttack)', 40, 70, { align: 'center' });
 
           doc.fontSize(10).fillColor('#FFE9A8');
-          doc.text('Centre for Development of Advanced Computing (C-DAC)', 40, 88, { align: 'center' });
+          doc.text('Patient Care Quality & Grievance Redressal System', 40, 88, { align: 'center' });
 
           // Hospital Name Banner
           doc.moveDown(3);
@@ -256,7 +256,7 @@ export class QrService {
           // Footer
           doc.rect(28, doc.page.height - 70, doc.page.width - 56, 42).fillColor('#1E6FD9').fill();
           doc.fillColor('#FFFFFF').fontSize(10).font('Helvetica-Bold');
-          doc.text('C-DAC eSushrut G5 - Patient Safety & Care Quality Monitoring System', 40, doc.page.height - 54, {
+          doc.text('DHH KATAKA - District Head Hospital - Patient Safety & Care Quality Monitoring System', 40, doc.page.height - 54, {
             align: 'center',
           });
         }

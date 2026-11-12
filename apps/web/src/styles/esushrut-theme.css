@@ -262,3 +262,81 @@ body {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
+
+/* Comprehensive Responsive Design for Mobiles, Tablets, Laptops & Desktops */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.es-sub-nav {
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.es-sub-nav::-webkit-scrollbar {
+  height: 4px;
+}
+
+.es-sub-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+}
+
+@media (max-width: 992px) {
+  .es-card {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .es-header {
+    padding: 8px 12px;
+  }
+  .es-brand-title {
+    font-size: 1.25rem;
+  }
+  .es-brand-badge {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+  }
+  .es-sub-nav {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+  .es-sub-item {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .es-card-body {
+    padding: 12px;
+  }
+  .container-fluid {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .table {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .es-header {
+    padding: 8px 10px;
+  }
+  .es-brand-title {
+    font-size: 1.1rem;
+  }
+  .es-footer {
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+  }
+  .es-footer .text-end {
+    text-align: center !important;
+  }
+}

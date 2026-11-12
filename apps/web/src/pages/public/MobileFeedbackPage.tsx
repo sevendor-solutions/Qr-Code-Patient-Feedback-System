@@ -124,6 +124,14 @@ export const MobileFeedbackPage: React.FC = () => {
 
   // Load hospital / dept info if parameters are available
   useEffect(() => {
+    const t = searchParams.get('type')?.toLowerCase();
+    if (t === 'opd' || t === 'ipd') {
+      setSvc(t as 'opd' | 'ipd');
+      setStep('form');
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     async function loadMeta() {
       if (!departmentId) return;
       try {

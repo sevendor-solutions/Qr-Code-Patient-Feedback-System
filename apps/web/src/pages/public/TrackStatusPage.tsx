@@ -55,9 +55,9 @@ export const TrackStatusPage: React.FC = () => {
       <header className="es-mobile-header">
         <div className="d-flex align-items-center justify-content-center mb-1">
           <FaHospital className="text-warning me-2" size={24} />
-          <h1 className="h4 mb-0 fw-bold">eSushrut G5 Grievance Tracking</h1>
+          <h1 className="h4 mb-0 fw-bold">DHH KATAKA · Grievance Tracking</h1>
         </div>
-        <p className="small mb-0 opacity-90">Government Hospital Grievance & Query Resolution</p>
+        <p className="small mb-0 opacity-90">District Head Hospital, Cuttack (ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ)</p>
       </header>
 
       <div className="p-3 flex-grow-1">
@@ -199,7 +199,7 @@ export const TrackStatusPage: React.FC = () => {
       </div>
 
       <footer className="p-3 text-center bg-light border-top text-muted small">
-        eSushrut G5 Patient Care Portal | Centre for Development of Advanced Computing (C-DAC)
+        DHH KATAKA Patient Care Portal · District Head Hospital (ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ)
       </footer>
     </div>
   );

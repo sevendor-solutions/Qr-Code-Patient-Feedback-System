@@ -29,12 +29,12 @@ export class SmsNotificationService {
   }
 
   async sendFeedbackAcknowledgement(mobile: string, ticketId: string, departmentName: string): Promise<boolean> {
-    const message = `Thank you for your valuable feedback for ${departmentName} at eSushrut G5 Hospital. Your reference ID is ${ticketId}. - C-DAC eSushrut`;
+    const message = `Thank you for your valuable feedback for ${departmentName} at DHH KATAKA (District Head Hospital). Your reference ID is ${ticketId}. - DHH Kataka`;
     return this.sendSms(mobile, message);
   }
 
   async sendComplaintAcknowledgement(mobile: string, ticketId: string, departmentName: string): Promise<boolean> {
-    const message = `Your query/complaint regarding ${departmentName} has been registered with Ticket ID ${ticketId}. Track status at hospital portal. - C-DAC eSushrut`;
+    const message = `Your query/complaint regarding ${departmentName} has been registered with Ticket ID ${ticketId}. Track status at DHH Kataka portal. - DHH Kataka`;
     return this.sendSms(mobile, message);
   }
 
@@ -44,7 +44,7 @@ export class SmsNotificationService {
     status: string,
     remarks: string,
   ): Promise<boolean> {
-    const message = `Update on Ticket ${ticketId}: Status changed to ${status}. Remarks: ${remarks.slice(0, 80)}. - C-DAC eSushrut`;
+    const message = `Update on Ticket ${ticketId}: Status changed to ${status}. Remarks: ${remarks.slice(0, 80)}. - DHH KATAKA`;
     return this.sendSms(mobile, message);
   }
 

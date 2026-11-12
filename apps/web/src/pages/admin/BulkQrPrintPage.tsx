@@ -17,8 +17,8 @@ export const BulkQrPrintPage: React.FC = () => {
 
   const [selectedHospital, setSelectedHospital] = useState('');
   const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
-  const [includeTelugu, setIncludeTelugu] = useState(true);
-  const [includeHindi, setIncludeHindi] = useState(true);
+  const [includeOdia, setIncludeOdia] = useState(true);
+  const [includeEnglish, setIncludeEnglish] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -63,8 +63,8 @@ export const BulkQrPrintPage: React.FC = () => {
         {
           hospitalId: selectedHospital,
           departmentIds: selectedDepts,
-          includeTelugu,
-          includeHindi,
+          includeOdia,
+          includeEnglish,
         },
         { responseType: 'blob' },
       );
@@ -72,7 +72,7 @@ export const BulkQrPrintPage: React.FC = () => {
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'esushrut-department-qr-standees.pdf');
+      link.setAttribute('download', 'dhh-kataka-department-qr-standees.pdf');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -85,14 +85,15 @@ export const BulkQrPrintPage: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid py-4 px-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <div className="container-fluid py-4 px-2 px-md-4">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-          <h1 className="h4 fw-bold text-dark mb-0">Bulk QR Code Print Sheet (A4 Standees)</h1>
+          <h1 className="h4 fw-bold text-dark mb-0">DHH KATAKA · Bulk QR Standee Print Sheet (A4)</h1>
           <small className="text-muted">
-            Export ready-to-print high-resolution multi-page A4 PDF with multilingual signage
+            Export ready-to-print high-resolution multi-page A4 PDF standees for OPD counters and IPD wards
           </small>
         </div>
+        <div className="badge bg-primary px-3 py-2">District Head Hospital, Cuttack</div>
       </div>
 
       {errorMsg && (
@@ -103,7 +104,7 @@ export const BulkQrPrintPage: React.FC = () => {
 
       <Row className="g-4">
         {/* Controls Column */}
-        <Col lg={7}>
+        <Col xs={12} lg={7}>
           <Card className="es-card">
             <div className="es-card-header">
               <FaPrint className="text-primary me-2" />
@@ -127,20 +128,20 @@ export const BulkQrPrintPage: React.FC = () => {
               {/* Multilingual Options */}
               <div className="p-3 bg-light rounded border mb-3">
                 <span className="fw-bold small d-block mb-2">Multilingual Text Signage</span>
-                <div className="d-flex gap-4">
+                <div className="d-flex flex-wrap gap-4">
                   <Form.Check
                     type="checkbox"
-                    id="include-telugu"
-                    label="Include Telugu (మీ అభిప్రాయాన్ని తెలియజేయడానికి స్కాన్ చేయండి)"
-                    checked={includeTelugu}
-                    onChange={(e) => setIncludeTelugu(e.target.checked)}
+                    id="include-odia"
+                    label="Include Odia (ଓଡ଼ିଆରେ ନିର୍ଦ୍ଦେଶାବଳୀ - ଆପଣଙ୍କ ମତାମତ ଦିଅନ୍ତୁ)"
+                    checked={includeOdia}
+                    onChange={(e) => setIncludeOdia(e.target.checked)}
                   />
                   <Form.Check
                     type="checkbox"
-                    id="include-hindi"
-                    label="Include Hindi (प्रतिक्रिया देने के लिए स्कैन करें)"
-                    checked={includeHindi}
-                    onChange={(e) => setIncludeHindi(e.target.checked)}
+                    id="include-english"
+                    label="Include English (Scan QR to submit feedback)"
+                    checked={includeEnglish}
+                    onChange={(e) => setIncludeEnglish(e.target.checked)}
                   />
                 </div>
               </div>
@@ -196,7 +197,7 @@ export const BulkQrPrintPage: React.FC = () => {
         </Col>
 
         {/* Standee Preview Column */}
-        <Col lg={5}>
+        <Col xs={12} lg={5}>
           <Card className="es-card">
             <div className="es-card-header">
               <h2 className="es-card-title h6 mb-0">A4 Standee Layout Preview</h2>
@@ -211,13 +212,14 @@ export const BulkQrPrintPage: React.FC = () => {
                 }}
               >
                 <div style={{ backgroundColor: '#1565C0', color: '#fff', padding: '6px', borderRadius: '3px' }}>
-                  <div className="fw-bold small">eSushrut G5</div>
-                  <div style={{ fontSize: '0.65rem' }}>Hospital Management System (C-DAC)</div>
+                  <div className="fw-bold small">DHH KATAKA</div>
+                  <div style={{ fontSize: '0.65rem' }}>District Head Hospital · କଟକ</div>
+                  <div style={{ fontSize: '0.6rem', color: '#C6E85A' }}>ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ</div>
                 </div>
 
                 <div className="my-1">
-                  <div className="fw-bold small text-primary">CENTRAL CIVIL HOSPITAL</div>
-                  <div className="small fw-semibold text-dark">Outpatient Department (OPD)</div>
+                  <div className="fw-bold small text-primary">DHH KATAKA</div>
+                  <div className="small fw-semibold text-dark">Outpatient / Inpatient Feedback</div>
                 </div>
 
                 <div className="my-1 p-2 bg-light border rounded d-inline-block mx-auto">
@@ -237,10 +239,10 @@ export const BulkQrPrintPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-2 bg-light rounded" style={{ fontSize: '0.65rem' }}>
+                <div className="p-2 bg-light rounded" style={{ fontSize: '0.68rem' }}>
                   <strong className="text-primary d-block">SCAN FOR PATIENT FEEDBACK</strong>
-                  {includeTelugu && <div className="text-warning">మీ అభిప్రాయాన్ని తెలియజేయండి</div>}
-                  {includeHindi && <div className="text-muted">प्रतिक्रिया दर्ज करें</div>}
+                  <div className="text-dark fw-semibold mt-1">ଆପଣଙ୍କ ମତାମତ ଦିଅନ୍ତୁ</div>
+                  <div className="text-muted" style={{ fontSize: '0.62rem' }}>OPD (10 Qs) · IPD (20 Qs)</div>
                 </div>
 
                 <div
@@ -252,7 +254,7 @@ export const BulkQrPrintPage: React.FC = () => {
                     borderRadius: '2px',
                   }}
                 >
-                  C-DAC Quality Care Monitoring
+                  DHH KATAKA · Quality & Patient Safety Cell
                 </div>
               </div>
             </Card.Body>

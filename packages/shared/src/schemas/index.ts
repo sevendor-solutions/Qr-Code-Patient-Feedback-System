@@ -72,8 +72,10 @@ export const GenerateQrSchema = z.object({
 export const BulkQrPrintSchema = z.object({
   hospitalId: z.string().uuid('Invalid hospital ID'),
   departmentIds: z.array(z.string().uuid()).min(1, 'Select at least one department'),
-  includeTelugu: z.boolean().default(true),
-  includeHindi: z.boolean().default(true),
+  includeOdia: z.boolean().default(true),
+  includeEnglish: z.boolean().default(true),
+  includeTelugu: z.boolean().default(false),
+  includeHindi: z.boolean().default(false),
 });
 
 export const UpdateComplaintStatusSchema = z.object({

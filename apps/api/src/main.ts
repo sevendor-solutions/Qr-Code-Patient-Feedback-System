@@ -56,9 +56,9 @@ async function bootstrap() {
 
   // Swagger Documentation Setup
   const config = new DocumentBuilder()
-    .setTitle('eSushrut G5 - Patient Feedback & Query System API')
+    .setTitle('DHH KATAKA - District Head Hospital | Patient Feedback & Query System API')
     .setDescription(
-      'Official C-DAC Government Hospital Management System (eSushrut G5) module for QR Code feedback, real-time grievance tracking, and SLA escalation matrix.',
+      'Official District Head Hospital, Cuttack (DHH KATAKA) system module for QR Code feedback, real-time grievance tracking, and patient satisfaction monitoring.',
     )
     .setVersion('1.0.0')
     .addTag('Authentication', 'JWT token generation, refresh, and profile endpoints')
@@ -67,20 +67,20 @@ async function bootstrap() {
     .addTag('Complaints', 'Complaint registration, photo attachment, and status tracking')
     .addTag('Reports & Analytics', 'Department summary, service metrics, and Excel/PDF export')
     .addTag('Escalation Matrix', 'Configurable multi-tier SLAs and auto-escalation cron triggers')
-    .addTag('Questions Master', 'Multilingual question catalog (English, Telugu, Hindi)')
+    .addTag('Questions Master', 'Multilingual question catalog (Odia, English)')
     .addTag('Service Categories', 'Hospital service category masters')
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: 'eSushrut G5 API Documentation | C-DAC',
+    customSiteTitle: 'DHH KATAKA API Documentation',
   });
 
   const port = process.env.PORT || 4000;
   await app.listen(port);
   pinoLogger.log(`================================================================`);
-  pinoLogger.log(` eSushrut G5 Backend API running at: http://localhost:${port}/api`);
+  pinoLogger.log(` DHH KATAKA Backend API running at:  http://localhost:${port}/api`);
   pinoLogger.log(` Swagger API Docs available at:      http://localhost:${port}/api/docs`);
   pinoLogger.log(`================================================================`);
 }

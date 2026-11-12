@@ -117,6 +117,20 @@ export const ComplaintsPage: React.FC = () => {
       ),
     },
     {
+      header: 'Stream',
+      render: (row) => {
+        const isIpd =
+          row.patientType === 'IPD' ||
+          row.department?.code === 'IPD' ||
+          row.location?.ward;
+        return isIpd ? (
+          <Badge bg="primary">IPD (ଅନ୍ତଃ)</Badge>
+        ) : (
+          <Badge bg="success">OPD (ବହିଃ)</Badge>
+        );
+      },
+    },
+    {
       header: 'Patient Details',
       render: (row) => (
         <div>
@@ -161,20 +175,60 @@ export const ComplaintsPage: React.FC = () => {
   ];
 
   return (
-    <div className="container-fluid py-4 px-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <div className="container-fluid py-4 px-2 px-md-4">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-          <h1 className="h4 fw-bold text-dark mb-0">Query & Complaint Redressal Management</h1>
+          <h1 className="h4 fw-bold text-dark mb-0">DHH KATAKA · Query & Complaint Redressal Management</h1>
           <small className="text-muted">
-            Track, assign, update SLA resolution status, and communicate remarks to patients
+            Track, assign, update SLA resolution status for OPD (24h) and IPD (12h) patient grievances
           </small>
         </div>
+        <div className="badge bg-primary px-3 py-2">District Head Hospital, Cuttack</div>
+      </div>
+
+      {/* OPD / IPD Quick Switcher Bar */}
+      <div className="d-flex flex-wrap gap-2 mb-3">
+        <Button
+          variant={!selectedDept ? 'primary' : 'outline-secondary'}
+          size="sm"
+          className="fw-bold px-3"
+          onClick={() => {
+            setSelectedDept('');
+            setPage(1);
+          }}
+        >
+          All Grievances (ସମସ୍ତ)
+        </Button>
+        <Button
+          variant={departments.find((d: any) => d.id === selectedDept)?.code === 'OPD' ? 'success' : 'outline-success'}
+          size="sm"
+          className="fw-bold px-3"
+          onClick={() => {
+            const opd = departments.find((d: any) => d.code === 'OPD');
+            if (opd) setSelectedDept(opd.id);
+            setPage(1);
+          }}
+        >
+          OPD Complaints · ବହିଃ-ବିଭାଗ
+        </Button>
+        <Button
+          variant={departments.find((d: any) => d.id === selectedDept)?.code === 'IPD' ? 'primary' : 'outline-primary'}
+          size="sm"
+          className="fw-bold px-3"
+          onClick={() => {
+            const ipd = departments.find((d: any) => d.code === 'IPD');
+            if (ipd) setSelectedDept(ipd.id);
+            setPage(1);
+          }}
+        >
+          IPD Complaints · ଅନ୍ତଃ-ବିଭାଗ Wards
+        </Button>
       </div>
 
       {/* Filter Bar */}
       <Card className="es-card mb-3 p-3">
         <Row className="g-2">
-          <Col md={3}>
+          <Col xs={12} sm={6} md={3}>
             <Form.Select
               value={statusFilter}
               onChange={(e) => {
@@ -192,7 +246,7 @@ export const ComplaintsPage: React.FC = () => {
             </Form.Select>
           </Col>
 
-          <Col md={4}>
+          <Col xs={12} sm={6} md={4}>
             <Form.Select
               value={selectedDept}
               onChange={(e) => {
@@ -201,7 +255,7 @@ export const ComplaintsPage: React.FC = () => {
               }}
               size="sm"
             >
-              <option value="">-- All Departments --</option>
+              <option value="">-- All Departments / Units --</option>
               {departments.map((d: any) => (
                 <option key={d.id} value={d.id}>
                   {d.name} ({d.code})
@@ -210,7 +264,7 @@ export const ComplaintsPage: React.FC = () => {
             </Form.Select>
           </Col>
 
-          <Col md={2}>
+          <Col xs={12} md={3}>
             {(statusFilter || selectedDept || search) && (
               <Button
                 variant="outline-secondary"

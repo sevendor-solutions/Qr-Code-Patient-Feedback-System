@@ -48,7 +48,7 @@ export const ReportsPage: React.FC = () => {
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'esushrut-feedback-report.xlsx');
+      link.setAttribute('download', 'dhh-kataka-feedback-report.xlsx');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -65,7 +65,7 @@ export const ReportsPage: React.FC = () => {
       const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', 'esushrut-quality-report.pdf');
+      link.setAttribute('download', 'dhh-kataka-quality-report.pdf');
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -132,16 +132,16 @@ export const ReportsPage: React.FC = () => {
   }
 
   return (
-    <div className="container-fluid py-4 px-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
+    <div className="container-fluid py-4 px-2 px-md-4">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-          <h1 className="h4 fw-bold text-dark mb-0">Healthcare Feedback Analytics & Audit Reports</h1>
+          <h1 className="h4 fw-bold text-dark mb-0">DHH KATAKA · Feedback Analytics & Quality Reports</h1>
           <small className="text-muted">
-            Official quality assurance benchmarks, service touchpoint ratings & SLA compliance
+            District Head Hospital (ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ) · OPD (10 Qs) & IPD (20 Qs) Quality Audit
           </small>
         </div>
 
-        <div className="d-flex gap-2">
+        <div className="d-flex flex-wrap gap-2">
           <Button
             variant="outline-success"
             size="sm"

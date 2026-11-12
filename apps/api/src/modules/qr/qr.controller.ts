@@ -82,7 +82,7 @@ export class QrController {
     );
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="esushrut-qr-standees.pdf"');
+    res.setHeader('Content-Disposition', 'attachment; filename="dhh-kataka-qr-standees.pdf"');
     res.status(HttpStatus.OK).send(pdfBuffer);
   }
 }

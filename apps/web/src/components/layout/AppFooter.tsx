@@ -25,22 +25,22 @@ export const AppFooter: React.FC = () => {
   }, []);
 
   return (
-    <footer className="es-footer">
+    <footer className="es-footer d-flex flex-wrap justify-content-between align-items-center py-2 px-3 gap-2">
       <div className="d-flex align-items-center">
         <span
           className="badge bg-warning text-dark fw-bold me-2 px-2 py-1"
-          style={{ letterSpacing: '1px' }}
+          style={{ letterSpacing: '0.5px' }}
         >
-          C-DAC
+          DHH
         </span>
-        <span className="fw-semibold">eSushrut G5 - Hospital Management System</span>
+        <span className="fw-semibold">DHH KATAKA · District Head Hospital (ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ)</span>
       </div>
 
-      <div className="text-center fw-normal opacity-90 d-none d-md-block">
-        © Centre For Development Of Advanced Computing
+      <div className="text-center fw-normal opacity-90 d-none d-lg-block small">
+        © District Head Hospital, Cuttack (DHH KATAKA)
       </div>
 
-      <div className="text-end fw-bold" style={{ color: '#C6E85A', fontFamily: 'monospace' }}>
+      <div className="text-end fw-bold ms-auto" style={{ color: '#C6E85A', fontFamily: 'monospace', fontSize: '0.82rem' }}>
         {timeStr}
       </div>
     </footer>
