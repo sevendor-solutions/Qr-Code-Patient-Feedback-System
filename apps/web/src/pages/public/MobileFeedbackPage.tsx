@@ -5,10 +5,16 @@ import {
   FaHospital,
   FaUserMd,
   FaProcedures,
+  FaStethoscope,
+  FaPills,
+  FaVial,
+  FaBed,
+  FaUtensils,
+  FaShieldAlt,
+  FaArrowRight,
   FaCalendarAlt,
   FaUser,
   FaIdCard,
-  FaBed,
   FaCommentDots,
   FaPaperPlane,
   FaArrowLeft,
@@ -23,6 +29,7 @@ import {
   FaRocket,
   FaCheck,
   FaExclamationCircle,
+  FaHeartbeat,
 } from 'react-icons/fa';
 import {
   FaRegFaceFrown,
@@ -335,83 +342,167 @@ export const MobileFeedbackPage: React.FC = () => {
     <div className={`pf-app ${svc}`}>
       <div className="pf-container">
         {/* Header Hero Card */}
-        <header className="pf-header-card">
+        <header className={`pf-header-card ${step === 'choose' ? 'choose-hero' : ''}`}>
           <div className="pf-gov-pill">
-            <FaHospital style={{ marginRight: '4px' }} />
+            <FaHospital style={{ marginRight: '6px' }} />
             <span>Govt. of Odisha · ସ୍ୱାସ୍ଥ୍ୟ ଓ ପରିବାର କଲ୍ୟାଣ ବିଭାଗ</span>
           </div>
 
           <h1 className="pf-header-title">
-            DHH KATAKA · ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ
+            DHH KATAKA
           </h1>
+          <div className="pf-header-hospital-sub">
+            ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ · District Head Hospital, Cuttack
+          </div>
 
-          <p className="pf-header-subtitle">
-            {step === 'choose' && 'ଆପଣଙ୍କ ମତାମତ · Patient Feedback Portal'}
-            {step === 'form' && `${currentForm.abbr} ମତାମତ ଫର୍ମ · ${currentForm.title}`}
-            {step === 'done' && 'ଧନ୍ୟବାଦ · Feedback Registered Successfully'}
-          </p>
+          {step === 'choose' ? (
+            <div className="pf-choose-prompt-wrap">
+              <h2 className="pf-choose-prompt-title">ଆପଣଙ୍କ ମତାମତ · Patient Feedback Portal</h2>
+              <p className="pf-choose-prompt-desc">
+                ଆପଣ ଗ୍ରହଣ କରିଥିବା ସେବା ବାଛନ୍ତୁ · Please select the hospital service you used today:
+              </p>
+              <div className="pf-hero-trust-chips">
+                <span className="pf-trust-chip">
+                  <FaShieldAlt size={11} style={{ marginRight: '4px' }} /> 100% ଗୋପନୀୟ (Confidential)
+                </span>
+                <span className="pf-trust-chip">
+                  <FaClock size={11} style={{ marginRight: '4px' }} /> ୨-୪ ମିନିଟ୍ ସମୟ (~2-4 Mins)
+                </span>
+                <span className="pf-trust-chip">
+                  <FaCheckCircle size={11} style={{ marginRight: '4px' }} /> ସିଧାସଳଖ ପ୍ରଶାସନ ସମୀକ୍ଷା
+                </span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="pf-header-subtitle">
+                {step === 'form' && `${currentForm.abbr} ମତାମତ ଫର୍ମ · ${currentForm.title}`}
+                {step === 'done' && 'ଧନ୍ୟବାଦ · Feedback Registered Successfully'}
+              </p>
 
-          <p className="pf-header-desc">
-            {step === 'choose' && 'District Head Hospital, Cuttack. Please select the hospital service you used.'}
-            {step === 'form' && `${currentForm.abbr} Feedback. Rate each item from 1 (Poor) to 5 (Excellent).`}
-            {step === 'done' && 'Your feedback has been securely submitted to the hospital management system.'}
-          </p>
+              <p className="pf-header-desc">
+                {step === 'form' && `${currentForm.abbr} Feedback. Rate each item from 1 (Poor) to 5 (Excellent).`}
+                {step === 'done' && 'Your feedback has been securely submitted to the hospital management system.'}
+              </p>
+            </>
+          )}
         </header>
 
         {/* STEP 1: SERVICE SELECTION (OPD vs IPD) */}
         {step === 'choose' && (
-          <section className="pf-services-grid" aria-label="Select Hospital Service">
-            {/* OPD Choice Card */}
-            <button
-              className="pf-service-card opd"
-              type="button"
-              id="pick-opd"
-              onClick={() => startForm('opd')}
-            >
-              <div className="pf-service-card-icon">
-                <FaUserMd />
-              </div>
-              <div className="pf-service-info">
-                <div className="pf-service-top-row">
-                  <span className="pf-service-tag">OPD</span>
-                  <span className="pf-service-time">⏱️ 10 Questions · ~2 Mins</span>
-                </div>
-                <h2 className="pf-service-name-od">ବହିଃ-ବିଭାଗ ରୋଗୀ</h2>
-                <div className="pf-service-name-en">Outpatient Department Services</div>
-                <div className="pf-service-desc">
-                  Doctor consultation, prescription, OPD counter & laboratory diagnostics
-                </div>
-              </div>
-              <div className="pf-service-action-arrow">
-                <FaChevronRight size={14} />
-              </div>
-            </button>
+          <section className="pf-choose-section" aria-label="Select Hospital Service">
+            <div className="pf-choose-cards-grid">
+              {/* OPD Choice Card */}
+              <div
+                className="pf-choose-card opd"
+                id="pick-opd"
+                role="button"
+                tabIndex={0}
+                onClick={() => startForm('opd')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') startForm('opd'); }}
+              >
+                <div className="pf-choose-card-accent" />
+                <div className="pf-choose-card-body">
+                  <div className="pf-choose-card-header">
+                    <div className="pf-choose-card-icon opd">
+                      <FaUserMd />
+                    </div>
+                    <div className="pf-choose-card-badges">
+                      <span className="pf-badge-pill opd">OPD · ବହିଃ-ବିଭାଗ</span>
+                      <span className="pf-time-pill">
+                        <FaClock size={10} style={{ marginRight: '4px' }} />
+                        10 Questions · ~2 Mins
+                      </span>
+                    </div>
+                  </div>
 
-            {/* IPD Choice Card */}
-            <button
-              className="pf-service-card ipd"
-              type="button"
-              id="pick-ipd"
-              onClick={() => startForm('ipd')}
-            >
-              <div className="pf-service-card-icon">
-                <FaProcedures />
-              </div>
-              <div className="pf-service-info">
-                <div className="pf-service-top-row">
-                  <span className="pf-service-tag">IPD</span>
-                  <span className="pf-service-time">⏱️ 20 Questions · ~4 Mins</span>
+                  <h3 className="pf-choose-card-title-od">ବହିଃ-ବିଭାଗ ରୋଗୀ ସେବା</h3>
+                  <div className="pf-choose-card-title-en">Outpatient Department (OPD)</div>
+                  <p className="pf-choose-card-desc">
+                    ଡାକ୍ତର ପରାମର୍ଶ, ପଞ୍ଜିକରଣ କାଉଣ୍ଟର, ଔଷଧ ବଣ୍ଟନ ଓ ନିଦାନ ପରୀକ୍ଷା ସମ୍ବନ୍ଧୀୟ ମତାମତ ।
+                  </p>
+
+                  <div className="pf-choose-features-list">
+                    <span className="pf-feature-tag"><FaStethoscope size={10} /> ଡାକ୍ତର ପରାମର୍ଶ (Doctor)</span>
+                    <span className="pf-feature-tag"><FaIdCard size={10} /> ପଞ୍ଜିକରଣ (Counter)</span>
+                    <span className="pf-feature-tag"><FaPills size={10} /> ଔଷଧ କାଉଣ୍ଟର (Medicine)</span>
+                    <span className="pf-feature-tag"><FaVial size={10} /> ନିଦାନ ପରୀକ୍ଷା (Lab/X-Ray)</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pf-choose-cta-btn opd"
+                    onClick={(e) => { e.stopPropagation(); startForm('opd'); }}
+                  >
+                    <span>OPD ମତାମତ ଦିଅନ୍ତୁ · Start OPD</span>
+                    <FaArrowRight size={13} className="pf-cta-arrow" />
+                  </button>
                 </div>
-                <h2 className="pf-service-name-od">ଅନ୍ତଃ-ବିଭାଗ ରୋଗୀ</h2>
-                <div className="pf-service-name-en">Inpatient & Ward Services</div>
-                <div className="pf-service-desc">
-                  Ward admission, doctor rounds, nursing care, hygiene & hospital meals
+              </div>
+
+              {/* IPD Choice Card */}
+              <div
+                className="pf-choose-card ipd"
+                id="pick-ipd"
+                role="button"
+                tabIndex={0}
+                onClick={() => startForm('ipd')}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') startForm('ipd'); }}
+              >
+                <div className="pf-choose-card-accent" />
+                <div className="pf-choose-card-body">
+                  <div className="pf-choose-card-header">
+                    <div className="pf-choose-card-icon ipd">
+                      <FaProcedures />
+                    </div>
+                    <div className="pf-choose-card-badges">
+                      <span className="pf-badge-pill ipd">IPD · ଅନ୍ତଃ-ବିଭାଗ</span>
+                      <span className="pf-time-pill">
+                        <FaClock size={10} style={{ marginRight: '4px' }} />
+                        20 Questions · ~4 Mins
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 className="pf-choose-card-title-od">ଅନ୍ତଃ-ବିଭାଗ ରୋଗୀ ସେବା</h3>
+                  <div className="pf-choose-card-title-en">Inpatient & Ward Services (IPD)</div>
+                  <p className="pf-choose-card-desc">
+                    ୱାର୍ଡରେ ଭର୍ତ୍ତି, ବେଡ୍ ସୁବିଧା, ଡାକ୍ତର ରାଉଣ୍ଡ, ନର୍ସିଂ ଯତ୍ନ, ଖାଦ୍ୟ ଓ ପରିମଳ ସମ୍ବନ୍ଧୀୟ ମତାମତ ।
+                  </p>
+
+                  <div className="pf-choose-features-list">
+                    <span className="pf-feature-tag"><FaBed size={10} /> ୱାର୍ଡ ଓ ବେଡ୍ (Ward Stay)</span>
+                    <span className="pf-feature-tag"><FaUserMd size={10} /> ଡାକ୍ତର ରାଉଣ୍ଡ (Doctor Visits)</span>
+                    <span className="pf-feature-tag"><FaHeartbeat size={10} /> ନର୍ସିଂ ଯତ୍ନ (Nursing Care)</span>
+                    <span className="pf-feature-tag"><FaUtensils size={10} /> ଖାଦ୍ୟ ଓ ପରିମଳ (Food & Clean)</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pf-choose-cta-btn ipd"
+                    onClick={(e) => { e.stopPropagation(); startForm('ipd'); }}
+                  >
+                    <span>IPD ମତାମତ ଦିଅନ୍ତୁ · Start IPD</span>
+                    <FaArrowRight size={13} className="pf-cta-arrow" />
+                  </button>
                 </div>
               </div>
-              <div className="pf-service-action-arrow">
-                <FaChevronRight size={14} />
+            </div>
+
+            {/* Bottom Trust Banner */}
+            <div className="pf-choose-trust-banner">
+              <div className="pf-choose-trust-icon">
+                <FaCheckCircle />
               </div>
-            </button>
+              <div className="pf-choose-trust-text">
+                <div className="pf-choose-trust-od">
+                  ଆପଣଙ୍କ ମତାମତ ସିଧାସଳଖ ହସ୍ପିଟାଲ ପ୍ରଶାସନର ସମୀକ୍ଷା ପାଇଁ ଯାଏ ଏବଂ ରୋଗୀ ସେବାର ମାନ ବୃଦ୍ଧିରେ ସାହାଯ୍ୟ କରେ ।
+                </div>
+                <div className="pf-choose-trust-en">
+                  Your feedback directly reaches hospital authorities to continuously enhance patient care quality.
+                </div>
+              </div>
+            </div>
           </section>
         )}
 
