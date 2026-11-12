@@ -112,13 +112,18 @@ export class QrService {
     return verifyQrSignature(hospitalId, departmentId, locationId, token, secret);
   }
 
-  async listQrs(hospitalId?: string, departmentId?: string) {
+  async listQrs(hospitalId?: string, departmentId?: string, status?: string) {
+    const where: any = {};
+    if (hospitalId) where.hospitalId = hospitalId;
+    if (departmentId) where.departmentId = departmentId;
+    if (status === 'active') {
+      where.isActive = true;
+    } else if (status === 'inactive') {
+      where.isActive = false;
+    }
+
     const list = await this.prisma.qrMaster.findMany({
-      where: {
-        ...(hospitalId ? { hospitalId } : {}),
-        ...(departmentId ? { departmentId } : {}),
-        isActive: true,
-      },
+      where,
       include: {
         hospital: { select: { id: true, name: true, code: true } },
         department: { select: { id: true, name: true, code: true } },
@@ -135,10 +140,72 @@ export class QrService {
           errorCorrectionLevel: 'M',
           margin: 1,
           width: 250,
-          color: { dark: '#1565C0', light: '#FFFFFF' },
+          color: qr.isActive
+            ? { dark: '#1565C0', light: '#FFFFFF' }
+            : { dark: '#6c757d', light: '#FFFFFF' },
         }),
       })),
     );
+  }
+
+  async updateStatus(id: string, newStatus?: boolean, userId?: string) {
+    const existing = await this.prisma.qrMaster.findUnique({ where: { id } });
+    if (!existing) {
+      throw new BadRequestException(`QR Code with ID ${id} not found`);
+    }
+
+    const nextActive = newStatus !== undefined ? newStatus : !existing.isActive;
+
+    const updated = await this.prisma.qrMaster.update({
+      where: { id },
+      data: { isActive: nextActive },
+      include: {
+        hospital: { select: { id: true, name: true, code: true } },
+        department: { select: { id: true, name: true, code: true } },
+        location: true,
+      },
+    });
+
+    await this.auditService.log({
+      userId,
+      action: nextActive ? 'ACTIVATE_QR' : 'DEACTIVATE_QR',
+      entityName: 'QrMaster',
+      entityId: id,
+      details: { code: updated.code, isActive: nextActive },
+    });
+
+    return {
+      ...updated,
+      qrDataUrl: await QRCode.toDataURL(updated.targetUrl, {
+        errorCorrectionLevel: 'M',
+        margin: 1,
+        width: 250,
+        color: nextActive
+          ? { dark: '#1565C0', light: '#FFFFFF' }
+          : { dark: '#6c757d', light: '#FFFFFF' },
+      }),
+    };
+  }
+
+  async deleteQr(id: string, userId?: string) {
+    const existing = await this.prisma.qrMaster.findUnique({ where: { id } });
+    if (!existing) {
+      throw new BadRequestException(`QR Code with ID ${id} not found`);
+    }
+
+    await this.prisma.qrMaster.delete({
+      where: { id },
+    });
+
+    await this.auditService.log({
+      userId,
+      action: 'DELETE_QR',
+      entityName: 'QrMaster',
+      entityId: id,
+      details: { code: existing.code },
+    });
+
+    return { success: true, id, message: `QR Code ${existing.code} deleted successfully` };
   }
 
   async generateBulkPdf(

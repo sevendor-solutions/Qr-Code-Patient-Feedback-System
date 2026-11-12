@@ -117,11 +117,14 @@ export const BulkQrPrintPage: React.FC = () => {
                   value={selectedHospital}
                   onChange={(e) => setSelectedHospital(e.target.value)}
                 >
-                  {hospitals.map((h: any) => (
-                    <option key={h.id} value={h.id}>
-                      {h.name}
-                    </option>
-                  ))}
+                  {hospitals.map((h: any) => {
+                    const cleanName = (h.name || '').replace(/\s*\([Ee][Ss][Uu][Ss][Hh][Rr][Uu][Tt][^\)]*\)/g, '').trim();
+                    return (
+                      <option key={h.id} value={h.id}>
+                        {cleanName || 'DHH KATAKA - District Head Hospital'}
+                      </option>
+                    );
+                  })}
                 </Form.Select>
               </Form.Group>
 

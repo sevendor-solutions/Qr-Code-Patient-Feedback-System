@@ -2,6 +2,9 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
+  Delete,
+  Param,
   Body,
   Query,
   Res,
@@ -63,8 +66,34 @@ export class QrController {
   async listQrs(
     @Query('hospitalId') hospitalId?: string,
     @Query('departmentId') departmentId?: string,
+    @Query('status') status?: string,
   ) {
-    return this.qrService.listQrs(hospitalId, departmentId);
+    return this.qrService.listQrs(hospitalId, departmentId, status);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.DEPT_HEAD)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle or update active/inactive status of a QR code' })
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() body: { isActive?: boolean },
+    @CurrentUser('id') userId?: string,
+  ) {
+    return this.qrService.updateStatus(id, body?.isActive, userId);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.DEPT_HEAD)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a QR code' })
+  async deleteQr(
+    @Param('id') id: string,
+    @CurrentUser('id') userId?: string,
+  ) {
+    return this.qrService.deleteQr(id, userId);
   }
 
   @Post('bulk-print')

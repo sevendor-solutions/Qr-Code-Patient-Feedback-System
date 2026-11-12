@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Row, Col, Card, Form, Button, Alert, Spinner, Modal, Badge } from 'react-bootstrap';
 import { apiClient } from '../../api/client';
-import { FaQrcode, FaDownload, FaCopy, FaExternalLinkAlt, FaCheck } from 'react-icons/fa';
+import {
+  FaQrcode,
+  FaDownload,
+  FaCopy,
+  FaExternalLinkAlt,
+  FaCheck,
+  FaTrashAlt,
+  FaToggleOn,
+  FaToggleOff,
+  FaCheckCircle,
+  FaTimesCircle,
+} from 'react-icons/fa';
 
 export const QrGeneratorPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -35,6 +46,12 @@ export const QrGeneratorPage: React.FC = () => {
   const [counterName, setCounterName] = useState('');
   const [copied, setCopied] = useState(false);
   const [generatedResult, setGeneratedResult] = useState<any>(null);
+
+  // Catalog State: Status filter, actions, modal
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [deleteConfirmQr, setDeleteConfirmQr] = useState<any | null>(null);
+  const [statusAlert, setStatusAlert] = useState<{ type: 'success' | 'danger'; message: string } | null>(null);
 
   // Set initial selections when data loads
   React.useEffect(() => {
@@ -76,6 +93,59 @@ export const QrGeneratorPage: React.FC = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Toggle Active/Inactive Status
+  const handleToggleStatus = async (qr: any) => {
+    try {
+      setActionLoadingId(qr.id);
+      const newStatus = !qr.isActive;
+      await apiClient.patch(`/qr/${qr.id}/status`, { isActive: newStatus });
+      setStatusAlert({
+        type: 'success',
+        message: `QR Code "${qr.code}" is now ${newStatus ? 'Active' : 'Inactive'}.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['qr-list'] });
+    } catch (err: any) {
+      setStatusAlert({
+        type: 'danger',
+        message: `Failed to update status: ${err.response?.data?.message || err.message}`,
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Delete QR Code
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmQr) return;
+    try {
+      setActionLoadingId(deleteConfirmQr.id);
+      await apiClient.delete(`/qr/${deleteConfirmQr.id}`);
+      setStatusAlert({
+        type: 'success',
+        message: `QR Code "${deleteConfirmQr.code}" has been permanently deleted.`,
+      });
+      setDeleteConfirmQr(null);
+      queryClient.invalidateQueries({ queryKey: ['qr-list'] });
+    } catch (err: any) {
+      setStatusAlert({
+        type: 'danger',
+        message: `Failed to delete QR code: ${err.response?.data?.message || err.message}`,
+      });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Computed Counts and Filtered QR List
+  const activeCount = useMemo(() => qrList.filter((q: any) => q.isActive).length, [qrList]);
+  const inactiveCount = useMemo(() => qrList.filter((q: any) => !q.isActive).length, [qrList]);
+
+  const filteredQrs = useMemo(() => {
+    if (statusFilter === 'ACTIVE') return qrList.filter((q: any) => q.isActive);
+    if (statusFilter === 'INACTIVE') return qrList.filter((q: any) => !q.isActive);
+    return qrList;
+  }, [qrList, statusFilter]);
 
   return (
     <div className="container-fluid py-4 px-2 px-md-4">
@@ -132,11 +202,14 @@ export const QrGeneratorPage: React.FC = () => {
                     onChange={(e) => setSelectedHospital(e.target.value)}
                     required
                   >
-                    {hospitals.map((h: any) => (
-                      <option key={h.id} value={h.id}>
-                        {h.name} ({h.code})
-                      </option>
-                    ))}
+                    {hospitals.map((h: any) => {
+                      const cleanName = (h.name || '').replace(/\s*\([Ee][Ss][Uu][Ss][Hh][Rr][Uu][Tt][^\)]*\)/g, '').trim();
+                      return (
+                        <option key={h.id} value={h.id}>
+                          {cleanName || 'DHH KATAKA - District Head Hospital'}
+                        </option>
+                      );
+                    })}
                   </Form.Select>
                 </Form.Group>
 
@@ -163,132 +236,101 @@ export const QrGeneratorPage: React.FC = () => {
                     value={selectedLoc}
                     onChange={(e) => setSelectedLoc(e.target.value)}
                   >
-                    <option value="">-- Main Hospital Standee (OPD & IPD) --</option>
+                    <option value="">-- Main Department Standee (OPD + IPD) --</option>
                     {locations
                       .filter((l: any) => !selectedDept || l.departmentId === selectedDept)
-                      .map((loc: any) => (
-                        <option key={loc.id} value={loc.id}>
-                          {loc.name} - {loc.ward || loc.counter || loc.floor}
+                      .map((l: any) => (
+                        <option key={l.id} value={l.id}>
+                          {l.name} {l.counter ? `(${l.counter})` : ''} - Floor {l.floor || 'G'}
                         </option>
                       ))}
                   </Form.Select>
                 </Form.Group>
 
-                <Form.Group className="mb-3">
+                <Form.Group className="mb-4">
                   <Form.Label className="fw-semibold small">Counter Label / Notes</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="e.g. DHH Kataka - Main Entrance / Reception Standee"
+                    placeholder="e.g. Counter 3 / Reception Desk"
                     value={counterName}
                     onChange={(e) => setCounterName(e.target.value)}
                   />
-                  {/* Quick suggestion tags */}
-                  <div className="d-flex flex-wrap gap-1 mt-2">
-                    {[
-                      'Main Entrance Standee',
-                      'Reception & Helpdesk',
-                      'Central Waiting Hall',
-                      'Registration & Cash Counter',
-                      'Central Pharmacy Area',
-                      'Diagnostic & Lab Wing',
-                    ].map((tag) => (
-                      <span
-                        key={tag}
-                        className="badge bg-light text-dark border cursor-pointer"
-                        style={{ cursor: 'pointer', fontSize: '0.75rem' }}
-                        onClick={() => setCounterName(tag)}
-                      >
-                        + {tag}
-                      </span>
-                    ))}
-                  </div>
+                  <Form.Text className="text-muted">
+                    Helps identify the specific standee placement for hospital staff
+                  </Form.Text>
                 </Form.Group>
 
                 <Button
-                  type="submit"
                   variant="primary"
-                  className="w-100 es-touch-btn"
-                  disabled={generateMutation.isPending}
+                  type="submit"
+                  disabled={generateMutation.isPending || !selectedHospital || !selectedDept}
+                  className="w-100 py-2 fw-semibold d-flex align-items-center justify-content-center"
                 >
                   {generateMutation.isPending ? (
-                    <Spinner size="sm" className="me-2" />
+                    <>
+                      <Spinner size="sm" animation="border" className="me-2" />
+                      Generating Secure QR Code...
+                    </>
                   ) : (
-                    <FaQrcode className="me-2" />
+                    <>
+                      <FaQrcode className="me-2" />
+                      Generate Secured Standee QR Code
+                    </>
                   )}
-                  Generate Patient Feedback QR Code (OPD & IPD)
                 </Button>
               </Form>
-
-              {generateMutation.isError && (
-                <Alert variant="danger" className="mt-3 small">
-                  {(generateMutation.error as any)?.response?.data?.message ||
-                    'Failed to generate QR Code'}
-                </Alert>
-              )}
             </Card.Body>
           </Card>
         </Col>
 
-        {/* Preview Column */}
+        {/* Live Preview Column */}
         <Col xs={12} lg={6}>
-          <Card className="es-card text-center">
-            <div className="es-card-header justify-content-center">
+          <Card className="es-card text-center h-100 d-flex flex-column justify-content-center">
+            <div className="es-card-header text-start">
               <h2 className="es-card-title h6 mb-0">DHH KATAKA · Standee Live Preview</h2>
             </div>
-            <Card.Body className="d-flex flex-column align-items-center justify-content-center p-3 p-md-4">
+            <Card.Body className="p-4 d-flex flex-column align-items-center justify-content-center">
               {generatedResult ? (
-                <div style={{ maxWidth: '320px', width: '100%' }}>
-                  <div className="p-3 bg-white border border-2 border-primary rounded-3 mb-3 shadow-sm text-center">
-                    <div className="bg-primary text-white p-2 rounded mb-2">
-                      <div className="fw-bold fs-6">DHH KATAKA</div>
-                      <div style={{ fontSize: '0.72rem' }}>District Head Hospital · କଟକ</div>
-                      <div className="badge bg-warning text-dark mt-1" style={{ fontSize: '0.72rem' }}>
-                        ONE QR · OPD (10 Qs) & IPD (20 Qs)
-                      </div>
+                <div className="d-flex flex-column align-items-center w-100">
+                  <div
+                    className="p-3 border rounded-3 bg-white shadow-sm mb-3"
+                    style={{ maxWidth: '280px' }}
+                  >
+                    <div className="fw-bold text-primary mb-1 small">
+                      DHH KATAKA · ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ
                     </div>
-
+                    <div
+                      className="text-muted mb-2"
+                      style={{ fontSize: '11px', lineHeight: '1.2' }}
+                    >
+                      Patient Feedback & Grievance Standee
+                    </div>
                     <img
                       src={generatedResult.qrDataUrl}
-                      alt="Generated QR Code"
-                      style={{ width: '180px', height: '180px' }}
-                      className="border p-1 bg-light rounded"
+                      alt="Generated Standee QR Code"
+                      className="img-fluid"
+                      style={{ maxHeight: '200px' }}
                     />
-
-                    <div className="small fw-bold text-dark mt-2">
-                      {counterName || 'Hospital Main Standee (OPD + IPD)'}
+                    <div className="small fw-semibold mt-2 text-dark">
+                      {generatedResult.code}
                     </div>
-                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-                      Scan to choose OPD or IPD on your phone
+                    <div className="badge bg-light text-secondary border mt-1">
+                      OPD (10 Qs) + IPD (20 Qs)
                     </div>
-                    <div className="text-primary fw-semibold mt-1" style={{ fontSize: '0.72rem' }}>
-                      ଆପଣଙ୍କ ମତାମତ ଦେବା ପାଇଁ ସ୍କାନ୍ କରନ୍ତୁ
-                    </div>
-                  </div>
-
-                  <div className="p-2 bg-light rounded border text-break small mb-3 text-start">
-                    <strong>URL: </strong>
-                    <a
-                      href={generatedResult.targetUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-decoration-none"
-                    >
-                      {generatedResult.targetUrl}
-                    </a>
                   </div>
 
                   <div className="d-flex flex-wrap gap-2 justify-content-center">
                     <Button
-                      variant="outline-primary"
+                      variant={copied ? 'success' : 'outline-primary'}
                       size="sm"
                       onClick={() => handleCopyLink(generatedResult.targetUrl)}
                     >
-                      {copied ? <FaCheck className="me-1 text-success" /> : <FaCopy className="me-1" />}
-                      {copied ? 'Copied' : 'Copy URL'}
+                      {copied ? <FaCheck className="me-1" /> : <FaCopy className="me-1" />}
+                      {copied ? 'Copied!' : 'Copy Form URL'}
                     </Button>
                     <a
                       href={generatedResult.qrDataUrl}
-                      download={`DHH-KATAKA-PATIENT-FEEDBACK-QR-${generatedResult.code}.png`}
+                      download={`${generatedResult.code}.png`}
                       className="btn btn-primary btn-sm"
                     >
                       <FaDownload className="me-1" /> Download PNG
@@ -306,7 +348,7 @@ export const QrGeneratorPage: React.FC = () => {
               ) : (
                 <div className="py-5 text-muted">
                   <FaQrcode size={64} className="opacity-25 mb-3" />
-                  <p className="mb-0">Click "Generate Patient Feedback QR Code" to preview your hospital standee.</p>
+                  <p className="mb-0">Click "Generate Secured Standee QR Code" to preview your hospital standee.</p>
                 </div>
               )}
             </Card.Body>
@@ -314,17 +356,65 @@ export const QrGeneratorPage: React.FC = () => {
         </Col>
       </Row>
 
-      {/* Previously Generated QR Codes */}
+      {/* Previously Generated QR Codes Catalog with Delete, Active/Inactive Controls */}
       <Card className="es-card mt-4">
-        <div className="es-card-header d-flex justify-content-between align-items-center">
-          <h2 className="es-card-title h6 mb-0">Active Department QR Codes Catalog</h2>
-          <small className="text-muted">{qrList.length} Active Codes</small>
+        <div className="es-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h2 className="es-card-title h6 mb-0 d-flex align-items-center gap-2">
+              <FaQrcode className="text-primary" />
+              <span>Department QR Codes Catalog</span>
+            </h2>
+            <small className="text-muted">
+              Manage active/inactive status and delete unused QR code standees
+            </small>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <div className="btn-group btn-group-sm" role="group">
+              <button
+                type="button"
+                className={`btn btn-sm ${statusFilter === 'ALL' ? 'btn-primary' : 'btn-outline-secondary'}`}
+                onClick={() => setStatusFilter('ALL')}
+              >
+                All ({qrList.length})
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${statusFilter === 'ACTIVE' ? 'btn-success' : 'btn-outline-secondary'}`}
+                onClick={() => setStatusFilter('ACTIVE')}
+              >
+                Active ({activeCount})
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${statusFilter === 'INACTIVE' ? 'btn-secondary' : 'btn-outline-secondary'}`}
+                onClick={() => setStatusFilter('INACTIVE')}
+              >
+                Inactive ({inactiveCount})
+              </button>
+            </div>
+          </div>
         </div>
+
+        {statusAlert && (
+          <Alert
+            variant={statusAlert.type}
+            className="m-3 mb-0 py-2 px-3 small d-flex justify-content-between align-items-center"
+            dismissible
+            onClose={() => setStatusAlert(null)}
+          >
+            <span>{statusAlert.message}</span>
+          </Alert>
+        )}
+
         <Card.Body className="p-0">
           {loadingList ? (
             <div className="text-center py-4 text-muted">Loading QR codes...</div>
-          ) : qrList.length === 0 ? (
-            <div className="text-center py-4 text-muted">No QR codes generated yet.</div>
+          ) : filteredQrs.length === 0 ? (
+            <div className="text-center py-4 text-muted">
+              {statusFilter === 'ALL'
+                ? 'No QR codes generated yet.'
+                : `No ${statusFilter.toLowerCase()} QR codes found.`}
+            </div>
           ) : (
             <div className="table-responsive">
               <table className="table table-hover mb-0 align-middle">
@@ -334,33 +424,62 @@ export const QrGeneratorPage: React.FC = () => {
                     <th>Code Identifier</th>
                     <th>Department</th>
                     <th>Location / Counter</th>
+                    <th>Status</th>
                     <th>Scan Count</th>
-                    <th>Actions</th>
+                    <th className="text-end pe-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {qrList.map((qr: any) => (
-                    <tr key={qr.id}>
-                      <td style={{ width: '80px' }}>
+                  {filteredQrs.map((qr: any) => (
+                    <tr
+                      key={qr.id}
+                      className={!qr.isActive ? 'table-light opacity-75' : ''}
+                    >
+                      <td style={{ width: '70px' }}>
                         <img
                           src={qr.qrDataUrl}
                           alt={qr.code}
-                          style={{ width: '50px', height: '50px' }}
-                          className="border rounded"
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            filter: qr.isActive ? 'none' : 'grayscale(100%) opacity(0.6)',
+                          }}
+                          className="border rounded p-1 bg-white"
                         />
                       </td>
-                      <td className="fw-bold text-primary small">{qr.code}</td>
-                      <td>{qr.department?.name}</td>
+                      <td>
+                        <div className="fw-bold text-primary small">{qr.code}</div>
+                        <div className="text-muted" style={{ fontSize: '11px' }}>
+                          Created {new Date(qr.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="fw-semibold">{qr.department?.name || 'Department'}</span>
+                      </td>
                       <td>
                         {qr.location
-                          ? `${qr.location.name} (${qr.location.counter || qr.location.floor})`
+                          ? `${qr.location.name} (${qr.location.counter || qr.location.floor || 'Main'})`
                           : 'General Department'}
                       </td>
                       <td>
-                        <span className="badge bg-secondary">{qr.scanCount} scans</span>
+                        {qr.isActive ? (
+                          <span className="badge bg-success bg-opacity-10 text-success border border-success d-inline-flex align-items-center gap-1">
+                            <FaCheckCircle size={10} /> Active
+                          </span>
+                        ) : (
+                          <span className="badge bg-secondary bg-opacity-10 text-muted border border-secondary d-inline-flex align-items-center gap-1">
+                            <FaTimesCircle size={10} /> Inactive
+                          </span>
+                        )}
                       </td>
                       <td>
+                        <span className="badge bg-light text-dark border">
+                          {qr.scanCount} scans
+                        </span>
+                      </td>
+                      <td className="text-end pe-3">
                         <div className="btn-group btn-group-sm">
+                          {/* Copy URL */}
                           <Button
                             variant="outline-secondary"
                             onClick={() => handleCopyLink(qr.targetUrl)}
@@ -368,6 +487,8 @@ export const QrGeneratorPage: React.FC = () => {
                           >
                             <FaCopy />
                           </Button>
+
+                          {/* Download PNG */}
                           <a
                             href={qr.qrDataUrl}
                             download={`${qr.code}.png`}
@@ -376,15 +497,50 @@ export const QrGeneratorPage: React.FC = () => {
                           >
                             <FaDownload />
                           </a>
+
+                          {/* Test / Open Form */}
                           <a
                             href={qr.targetUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="btn btn-outline-success"
+                            className="btn btn-outline-info"
                             title="Open Patient Form"
                           >
                             <FaExternalLinkAlt />
                           </a>
+
+                          {/* Toggle Active / Inactive */}
+                          <Button
+                            variant={qr.isActive ? 'outline-warning' : 'outline-success'}
+                            onClick={() => handleToggleStatus(qr)}
+                            disabled={actionLoadingId === qr.id}
+                            title={qr.isActive ? 'Click to make Inactive' : 'Click to make Active'}
+                            className="d-inline-flex align-items-center gap-1 px-2"
+                          >
+                            {actionLoadingId === qr.id ? (
+                              <Spinner size="sm" animation="border" />
+                            ) : qr.isActive ? (
+                              <>
+                                <FaToggleOn className="text-warning" />
+                                <span className="d-none d-md-inline small">Deactivate</span>
+                              </>
+                            ) : (
+                              <>
+                                <FaToggleOff className="text-success" />
+                                <span className="d-none d-md-inline small">Activate</span>
+                              </>
+                            )}
+                          </Button>
+
+                          {/* Delete */}
+                          <Button
+                            variant="outline-danger"
+                            onClick={() => setDeleteConfirmQr(qr)}
+                            disabled={actionLoadingId === qr.id}
+                            title="Delete this QR Code"
+                          >
+                            <FaTrashAlt />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -395,6 +551,72 @@ export const QrGeneratorPage: React.FC = () => {
           )}
         </Card.Body>
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={!!deleteConfirmQr}
+        onHide={() => setDeleteConfirmQr(null)}
+        centered
+        backdrop="static"
+      >
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title className="h6 mb-0 d-flex align-items-center gap-2">
+            <FaTrashAlt /> Confirm Delete QR Code
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <p className="mb-3">
+            Are you sure you want to permanently delete this QR Code?
+          </p>
+          <div className="p-3 bg-light rounded border mb-3 small">
+            <div className="mb-1">
+              <strong>Code Identifier:</strong>{' '}
+              <code className="text-primary fw-bold">{deleteConfirmQr?.code}</code>
+            </div>
+            <div className="mb-1">
+              <strong>Department:</strong> {deleteConfirmQr?.department?.name}
+            </div>
+            <div className="mb-1">
+              <strong>Location:</strong>{' '}
+              {deleteConfirmQr?.location?.name || 'General Department'}
+            </div>
+            <div>
+              <strong>Current Status:</strong>{' '}
+              <Badge bg={deleteConfirmQr?.isActive ? 'success' : 'secondary'}>
+                {deleteConfirmQr?.isActive ? 'Active' : 'Inactive'}
+              </Badge>
+            </div>
+          </div>
+          <div className="alert alert-warning py-2 px-3 small mb-0">
+            <strong>Warning:</strong> Deleting this QR code will permanently remove it from the catalog. Existing patient feedback history will remain intact.
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-light">
+          <Button
+            variant="outline-secondary"
+            onClick={() => setDeleteConfirmQr(null)}
+            disabled={!!actionLoadingId}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleConfirmDelete}
+            disabled={!!actionLoadingId}
+            className="d-flex align-items-center gap-2"
+          >
+            {actionLoadingId ? (
+              <>
+                <Spinner size="sm" animation="border" /> Deleting...
+              </>
+            ) : (
+              <>
+                <FaTrashAlt /> Delete QR Code
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

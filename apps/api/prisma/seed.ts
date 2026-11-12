@@ -28,12 +28,12 @@ async function main() {
   // 1. Create Hospital
   const hospital = await prisma.hospital.create({
     data: {
-      code: 'ESUSHRUT-CENTRAL',
-      name: 'eSushrut Model Civil & Teaching Hospital',
-      address: 'Central Medical Enclave, Health City, New Delhi - 110001',
-      contactEmail: 'nodal.grievance@esushrut-cdac.in',
-      contactPhone: '011-26598700',
-      logoUrl: '/cdac-logo.svg',
+      code: 'DHH-KATAKA',
+      name: 'DHH KATAKA - District Head Hospital',
+      address: 'District Head Hospital, Cuttack, Odisha - 753001',
+      contactEmail: 'nodal.grievance@dhhkataka.odisha.gov.in',
+      contactPhone: '0671-2300000',
+      logoUrl: '/odisha-logo.svg',
       isActive: true,
       createdBy: 'SYSTEM_INSTALLER',
     },
