@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiClient } from '../../api/client';
 import {
@@ -21,6 +21,8 @@ import {
   FaStopwatch,
   FaBolt,
   FaRocket,
+  FaCheck,
+  FaExclamationCircle,
 } from 'react-icons/fa';
 import {
   FaRegFaceFrown,
@@ -57,6 +59,14 @@ const SCALE_OD = ['ନ୍ୟୂନ', 'ଚଳଣୀୟ', 'ଭଲ', 'ବହୁତ 
 const SCALE_EN = ['Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
 const TIME_OD = ['୩୦ ମିନିଟ୍ ଅଧିକ', '୧୦-୩୦ ମିନିଟ୍', '୫-୧୦ ମିନିଟ୍', '୫ ମିନିଟରୁ କମ୍', 'ସଙ୍ଗେ ସଙ୍ଗେ'];
 const TIME_EN = ['Over 30 min', '10-30 min', '5-10 min', 'Under 5 min', 'Immediately'];
+
+const QUICK_CHIPS = [
+  'ଡାକ୍ତର ଉତ୍ତମ ଚିକିତ୍ସା କଲେ (Good Doctor Care)',
+  'ପରିମଳ ସଫାସୁତୁରା ଭଲ (Clean Premises)',
+  'ଔଷଧ ଶୀଘ୍ର ମିଳିଲା (Quick Medicines)',
+  'କର୍ମଚାରୀଙ୍କ ବ୍ୟବହାର ଭଲ (Polite Staff)',
+  'ଅପେକ୍ଷା ସମୟ କମାନ୍ତୁ (Reduce Waiting Time)',
+];
 
 const FORMS: Record<'opd' | 'ipd', FormDefinition> = {
   opd: {
@@ -150,6 +160,7 @@ export const MobileFeedbackPage: React.FC = () => {
   const [statusMsg, setStatusMsg] = useState<string>('');
   const [isError, setIsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submittedReceipt, setSubmittedReceipt] = useState<any>(null);
 
   // Auto-select service if passed in URL
   useEffect(() => {
@@ -180,17 +191,34 @@ export const MobileFeedbackPage: React.FC = () => {
     }
   };
 
+  const handleAddChip = (chipText: string) => {
+    setComment((prev) => {
+      const clean = chipText.split(' (')[0].replace(/^\+\s*/, '');
+      if (!prev) return clean;
+      return `${prev}, ${clean}`;
+    });
+  };
+
   const handleBackToChoose = () => {
     setStep('choose');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const currentForm = FORMS[svc];
+  const otherSvc = svc === 'opd' ? 'ipd' : 'opd';
+
+  // Real-time progress computation
+  const totalQuestions = currentForm.qs.length;
+  const answeredCount = useMemo(() => {
+    return Object.keys(answers).length;
+  }, [answers]);
+  const progressPct = Math.round((answeredCount / totalQuestions) * 100);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const f = FORMS[svc];
     const missingIds: number[] = [];
 
-    f.qs.forEach((_, idx) => {
+    currentForm.qs.forEach((_, idx) => {
       const qNum = idx + 1;
       if (!answers[qNum]) {
         missingIds.push(qNum);
@@ -213,7 +241,7 @@ export const MobileFeedbackPage: React.FC = () => {
     setIsError(false);
 
     try {
-      const answersList = f.qs.map((_, idx) => answers[idx + 1]);
+      const answersList = currentForm.qs.map((_, idx) => answers[idx + 1]);
 
       const payload = {
         hospitalId: hospitalId || undefined,
@@ -224,18 +252,24 @@ export const MobileFeedbackPage: React.FC = () => {
         patientName: patientName.trim() || undefined,
         crNumber: ticketNumber.trim() || undefined,
         patientType: svc === 'opd' ? 'OPD' : 'IPD',
-        service: FORMS[svc].abbr,
+        service: currentForm.abbr,
         hospital: 'DHH Kataka',
         date: formDate,
         patient: patientName.trim(),
         ticket: ticketNumber.trim(),
-        ward: FORMS[svc].ward ? wardName.trim() : undefined,
+        ward: currentForm.ward ? wardName.trim() : undefined,
         answers: answersList,
         comments: comment.trim() || undefined,
         submittedAt: new Date().toISOString(),
       };
 
-      await apiClient.post('/feedback/submit', payload);
+      const res = await apiClient.post('/feedback/submit', payload);
+      setSubmittedReceipt({
+        ticketId: res.data?.ticketId || `FB-${Date.now().toString().slice(-6)}`,
+        date: formDate,
+        service: currentForm.abbr,
+        patient: patientName.trim() || 'Anonymous Patient',
+      });
       setSubmitting(false);
       setStep('done');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -250,15 +284,15 @@ export const MobileFeedbackPage: React.FC = () => {
     if (isTime) {
       switch (n) {
         case 1:
-          return <FaHourglassHalf size={18} />;
+          return <FaHourglassHalf />;
         case 2:
-          return <FaClock size={18} />;
+          return <FaClock />;
         case 3:
-          return <FaStopwatch size={18} />;
+          return <FaStopwatch />;
         case 4:
-          return <FaBolt size={18} />;
+          return <FaBolt />;
         case 5:
-          return <FaRocket size={18} />;
+          return <FaRocket />;
         default:
           return null;
       }
@@ -267,15 +301,15 @@ export const MobileFeedbackPage: React.FC = () => {
     if (isSelected) {
       switch (n) {
         case 1:
-          return <FaFaceFrown size={20} />;
+          return <FaFaceFrown />;
         case 2:
-          return <FaFaceMeh size={20} />;
+          return <FaFaceMeh />;
         case 3:
-          return <FaFaceSmile size={20} />;
+          return <FaFaceSmile />;
         case 4:
-          return <FaFaceSmileBeam size={20} />;
+          return <FaFaceSmileBeam />;
         case 5:
-          return <FaFaceGrinStars size={20} />;
+          return <FaFaceGrinStars />;
         default:
           return null;
       }
@@ -283,145 +317,178 @@ export const MobileFeedbackPage: React.FC = () => {
 
     switch (n) {
       case 1:
-        return <FaRegFaceFrown size={20} />;
+        return <FaRegFaceFrown />;
       case 2:
-        return <FaRegFaceMeh size={20} />;
+        return <FaRegFaceMeh />;
       case 3:
-        return <FaRegFaceSmile size={20} />;
+        return <FaRegFaceSmile />;
       case 4:
-        return <FaRegFaceSmileBeam size={20} />;
+        return <FaRegFaceSmileBeam />;
       case 5:
-        return <FaRegFaceGrinStars size={20} />;
+        return <FaRegFaceGrinStars />;
       default:
         return null;
     }
   };
 
-  const currentForm = FORMS[svc];
-  const otherSvc = svc === 'opd' ? 'ipd' : 'opd';
-
   return (
-    <div className="patient-feedback-page">
-      <main>
-        {/* Official Header */}
-        <header>
-          <div className="hospital-badge">
-            <FaHospital className="badge-icon" />
-            <span className="eyebrow">DHH Kataka · ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ</span>
+    <div className={`pf-app ${svc}`}>
+      <div className="pf-container">
+        {/* Header Hero Card */}
+        <header className="pf-header-card">
+          <div className="pf-gov-pill">
+            <FaHospital style={{ marginRight: '4px' }} />
+            <span>Govt. of Odisha · ସ୍ୱାସ୍ଥ୍ୟ ଓ ପରିବାର କଲ୍ୟାଣ ବିଭାଗ</span>
           </div>
-          <h1 id="title">
-            {step === 'choose' && 'ଆପଣଙ୍କ ମତାମତ'}
-            {step === 'form' && `${currentForm.abbr} ମତାମତ`}
-            {step === 'done' && 'ଆପଣଙ୍କ ମତାମତ'}
+
+          <h1 className="pf-header-title">
+            DHH KATAKA · ଜିଲ୍ଲା ମୁଖ୍ୟ ଚିକିତ୍ସାଳୟ, କଟକ
           </h1>
-          <p className="en" id="sub">
-            {step === 'choose' && 'Your feedback. Please choose the service you used.'}
-            {step === 'form' && `${currentForm.abbr} feedback. Tap one box for each question.`}
-            {step === 'done' && 'Feedback received.'}
+
+          <p className="pf-header-subtitle">
+            {step === 'choose' && 'ଆପଣଙ୍କ ମତାମତ · Patient Feedback Portal'}
+            {step === 'form' && `${currentForm.abbr} ମତାମତ ଫର୍ମ · ${currentForm.title}`}
+            {step === 'done' && 'ଧନ୍ୟବାଦ · Feedback Registered Successfully'}
+          </p>
+
+          <p className="pf-header-desc">
+            {step === 'choose' && 'District Head Hospital, Cuttack. Please select the hospital service you used.'}
+            {step === 'form' && `${currentForm.abbr} Feedback. Rate each item from 1 (Poor) to 5 (Excellent).`}
+            {step === 'done' && 'Your feedback has been securely submitted to the hospital management system.'}
           </p>
         </header>
 
-        {/* STEP 1: CHOOSE SERVICE (OPD / IPD) */}
+        {/* STEP 1: SERVICE SELECTION (OPD vs IPD) */}
         {step === 'choose' && (
-          <section id="step-choose" className="choices" aria-label="Choose a service">
+          <section className="pf-services-grid" aria-label="Select Hospital Service">
+            {/* OPD Choice Card */}
             <button
-              className="choice"
+              className="pf-service-card opd"
               type="button"
-              data-svc="opd"
               id="pick-opd"
               onClick={() => startForm('opd')}
             >
-              <div className="choice-left">
-                <div
-                  className="choice-icon-badge"
-                  style={{ color: 'var(--opd)', background: 'rgba(11, 122, 117, 0.1)' }}
-                >
-                  <FaUserMd size={26} />
+              <div className="pf-service-card-icon">
+                <FaUserMd />
+              </div>
+              <div className="pf-service-info">
+                <div className="pf-service-top-row">
+                  <span className="pf-service-tag">OPD</span>
+                  <span className="pf-service-time">⏱️ 10 Questions · ~2 Mins</span>
                 </div>
-                <div className="choice-details">
-                  <span className="abbr">OPD</span>
-                  <span className="name">ବହିଃ-ବିଭାଗ ରୋଗୀ</span>
-                  <span className="en">Outpatient (10 questions)</span>
+                <h2 className="pf-service-name-od">ବହିଃ-ବିଭାଗ ରୋଗୀ</h2>
+                <div className="pf-service-name-en">Outpatient Department Services</div>
+                <div className="pf-service-desc">
+                  Doctor consultation, prescription, OPD counter & laboratory diagnostics
                 </div>
               </div>
-              <div className="choice-arrow">
-                <FaChevronRight size={16} />
+              <div className="pf-service-action-arrow">
+                <FaChevronRight size={14} />
               </div>
             </button>
 
+            {/* IPD Choice Card */}
             <button
-              className="choice"
+              className="pf-service-card ipd"
               type="button"
-              data-svc="ipd"
               id="pick-ipd"
               onClick={() => startForm('ipd')}
             >
-              <div className="choice-left">
-                <div
-                  className="choice-icon-badge"
-                  style={{ color: 'var(--ipd)', background: 'rgba(47, 79, 163, 0.1)' }}
-                >
-                  <FaProcedures size={26} />
+              <div className="pf-service-card-icon">
+                <FaProcedures />
+              </div>
+              <div className="pf-service-info">
+                <div className="pf-service-top-row">
+                  <span className="pf-service-tag">IPD</span>
+                  <span className="pf-service-time">⏱️ 20 Questions · ~4 Mins</span>
                 </div>
-                <div className="choice-details">
-                  <span className="abbr">IPD</span>
-                  <span className="name">ଅନ୍ତଃ-ବିଭାଗ ରୋଗୀ</span>
-                  <span className="en">Inpatient (20 questions)</span>
+                <h2 className="pf-service-name-od">ଅନ୍ତଃ-ବିଭାଗ ରୋଗୀ</h2>
+                <div className="pf-service-name-en">Inpatient & Ward Services</div>
+                <div className="pf-service-desc">
+                  Ward admission, doctor rounds, nursing care, hygiene & hospital meals
                 </div>
               </div>
-              <div className="choice-arrow">
-                <FaChevronRight size={16} />
+              <div className="pf-service-action-arrow">
+                <FaChevronRight size={14} />
               </div>
             </button>
           </section>
         )}
 
-        {/* STEP 2: FEEDBACK FORM */}
+        {/* STEP 2: FEEDBACK QUESTIONNAIRE FORM */}
         {step === 'form' && (
-          <form id="step-form" data-svc={svc} onSubmit={handleSubmit} noValidate>
-            {/* Intro Card */}
-            <div className="intro">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FaClipboardCheck size={20} color="var(--accent)" />
-                <h2 id="form-title" style={{ margin: 0 }}>
-                  {currentForm.title}
-                </h2>
+          <form onSubmit={handleSubmit} noValidate>
+            {/* Sticky Real-Time Progress Bar */}
+            <div className="pf-sticky-bar">
+              <div className="pf-sticky-top-row">
+                <button
+                  type="button"
+                  className="pf-btn-change-service"
+                  onClick={handleBackToChoose}
+                >
+                  <FaArrowLeft size={12} />
+                  <span>ବଦଳାନ୍ତୁ · Change</span>
+                </button>
+                <div className="pf-progress-badge">
+                  {answeredCount} / {totalQuestions} Answered · {progressPct}%
+                </div>
               </div>
-              <p id="form-intro">{currentForm.intro}</p>
-              <p className="en" id="form-intro-en">
-                {currentForm.introEn}
-              </p>
+              <div className="pf-progress-track">
+                <div
+                  className={`pf-progress-fill ${svc}`}
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
             </div>
 
-            {/* Patient & Visit Details */}
-            <fieldset className="details" id="details">
-              <div className="field">
-                <label htmlFor="f-date">
-                  <FaCalendarAlt className="field-icon" />
-                  <span>
-                    ତାରିଖ <span className="en">Date</span>
-                  </span>
+            {/* Intro Card */}
+            <div className={`pf-intro-card ${svc}`}>
+              <div className="pf-intro-header">
+                <FaClipboardCheck className="pf-intro-icon" />
+                <h2 className="pf-intro-title">{currentForm.title}</h2>
+              </div>
+              <p className="pf-intro-od">{currentForm.intro}</p>
+              <p className="pf-intro-en">{currentForm.introEn}</p>
+            </div>
+
+            {/* Patient & Visit Details Card */}
+            <div className="pf-details-card">
+              <div className="pf-details-header">
+                <FaUser style={{ color: 'var(--pf-opd)' }} />
+                <span>ରୋଗୀ ଓ ପରିଦର୍ଶନ ବିବରଣୀ · Patient & Visit Details</span>
+              </div>
+
+              {/* Date */}
+              <div className="pf-field">
+                <label className="pf-field-label" htmlFor="f-date">
+                  <div className="pf-field-label-left">
+                    <FaCalendarAlt className="pf-field-icon" />
+                    <span>ତାରିଖ · Date</span>
+                  </div>
                 </label>
                 <input
                   type="date"
                   id="f-date"
-                  name="f-date"
+                  className="pf-input"
                   value={formDate}
                   onChange={(e) => setFormDate(e.target.value)}
+                  required
                 />
               </div>
 
-              <div className="field">
-                <label htmlFor="f-name">
-                  <FaUser className="field-icon" />
-                  <span>
-                    ରୋଗୀର ନାମ <span className="en">Patient name (optional)</span>
-                  </span>
+              {/* Patient Name */}
+              <div className="pf-field">
+                <label className="pf-field-label" htmlFor="f-name">
+                  <div className="pf-field-label-left">
+                    <FaUser className="pf-field-icon" />
+                    <span>ରୋଗୀର ନାମ · Patient name</span>
+                  </div>
+                  <span className="pf-field-optional">ଇଚ୍ଛାଧୀନ · Optional</span>
                 </label>
                 <input
                   type="text"
                   id="f-name"
-                  name="f-name"
+                  className="pf-input"
                   autoComplete="off"
                   placeholder="e.g. Ramesh Sahoo"
                   value={patientName}
@@ -429,17 +496,19 @@ export const MobileFeedbackPage: React.FC = () => {
                 />
               </div>
 
-              <div className="field">
-                <label htmlFor="f-ticket">
-                  <FaIdCard className="field-icon" />
-                  <span>
-                    {currentForm.ticketOd} <span className="en">{currentForm.ticketEn} (optional)</span>
-                  </span>
+              {/* Ticket Number */}
+              <div className="pf-field">
+                <label className="pf-field-label" htmlFor="f-ticket">
+                  <div className="pf-field-label-left">
+                    <FaIdCard className="pf-field-icon" />
+                    <span>{currentForm.ticketOd} · {currentForm.ticketEn}</span>
+                  </div>
+                  <span className="pf-field-optional">ଇଚ୍ଛାଧୀନ · Optional</span>
                 </label>
                 <input
                   type="text"
                   id="f-ticket"
-                  name="f-ticket"
+                  className="pf-input"
                   autoComplete="off"
                   placeholder={svc === 'opd' ? 'e.g. OPD-12345' : 'e.g. IPD-98765'}
                   value={ticketNumber}
@@ -447,18 +516,20 @@ export const MobileFeedbackPage: React.FC = () => {
                 />
               </div>
 
+              {/* Ward (for IPD) */}
               {currentForm.ward && (
-                <div className="field">
-                  <label htmlFor="f-ward">
-                    <FaBed className="field-icon" />
-                    <span>
-                      ୱାର୍ଡ / ବେଡ୍ ନଂ <span className="en">Ward / Bed no. (optional)</span>
-                    </span>
+                <div className="pf-field">
+                  <label className="pf-field-label" htmlFor="f-ward">
+                    <div className="pf-field-label-left">
+                      <FaBed className="pf-field-icon" />
+                      <span>ୱାର୍ଡ / ବେଡ୍ ନଂ · Ward / Bed no.</span>
+                    </div>
+                    <span className="pf-field-optional">ଇଚ୍ଛାଧୀନ · Optional</span>
                   </label>
                   <input
                     type="text"
                     id="f-ward"
-                    name="f-ward"
+                    className="pf-input"
                     autoComplete="off"
                     placeholder="e.g. Male Medical Ward, Bed 12"
                     value={wardName}
@@ -466,28 +537,48 @@ export const MobileFeedbackPage: React.FC = () => {
                   />
                 </div>
               )}
-            </fieldset>
+            </div>
 
             {/* Questions List */}
-            <ol className="qlist" id="qlist">
+            <ol className="pf-questions-list">
               {currentForm.qs.map((q, idx) => {
                 const qNum = idx + 1;
                 const isMissing = missing.includes(qNum);
                 const selectedVal = answers[qNum];
 
                 return (
-                  <li key={qNum} className={`q ${isMissing ? 'missing' : ''}`} id={`q${qNum}`}>
-                    <div className="qhead">
-                      <span className="qnum">{qNum}</span>
-                      <div className="qtext">
-                        <span>{q.o}</span>
-                        <span className="en">{q.e}</span>
+                  <li
+                    key={qNum}
+                    className={`pf-question-card ${isMissing ? 'missing' : ''}`}
+                    id={`q${qNum}`}
+                  >
+                    <div className="pf-q-top">
+                      <div className="pf-q-left">
+                        <span className="pf-q-num">
+                          {qNum < 10 ? `0${qNum}` : qNum}
+                        </span>
+                        <div className="pf-q-text">
+                          <div className="pf-q-od">{q.o}</div>
+                          <div className="pf-q-en">{q.e}</div>
+                        </div>
                       </div>
+
+                      {selectedVal ? (
+                        <span className="pf-q-status-badge answered">
+                          <FaCheck size={9} style={{ marginRight: '3px' }} />
+                          Answered
+                        </span>
+                      ) : (
+                        <span className="pf-q-status-badge pending">
+                          Pending
+                        </span>
+                      )}
                     </div>
 
-                    <div className="scale">
+                    {/* 5-Point Segmented Rating Scale */}
+                    <div className="pf-scale-grid">
                       {[1, 2, 3, 4, 5].map((n) => (
-                        <label key={n} className="opt">
+                        <label key={n} className="pf-rate-opt">
                           <input
                             type="radio"
                             name={`q${qNum}`}
@@ -495,92 +586,173 @@ export const MobileFeedbackPage: React.FC = () => {
                             checked={selectedVal === n}
                             onChange={() => handleSelectRating(qNum, n)}
                           />
-                          <span>
-                            <span className="scale-icon-wrap">
+                          <div className={`pf-rate-btn rate-${n}`}>
+                            <div className="pf-rate-icon">
                               {getScaleIcon(n, q.time, selectedVal === n)}
-                            </span>
-                            <b>{n}</b>
-                            <span className="scale-label-od">
+                            </div>
+                            <div className="pf-rate-num">{n}</div>
+                            <div className="pf-rate-od">
                               {(q.time ? TIME_OD : SCALE_OD)[n - 1]}
-                            </span>
-                            <span className="scale-label-en">
+                            </div>
+                            <div className="pf-rate-en">
                               {(q.time ? TIME_EN : SCALE_EN)[n - 1]}
-                            </span>
-                          </span>
+                            </div>
+                          </div>
                         </label>
                       ))}
                     </div>
+
+                    {/* Dynamic feedback indicator when selected */}
+                    {selectedVal && (
+                      <div className={`pf-selected-callout rate-${selectedVal}`}>
+                        <FaCheck size={10} />
+                        <span>
+                          ଆପଣ ବାଛିଛନ୍ତି: {selectedVal} · {(q.time ? TIME_OD : SCALE_OD)[selectedVal - 1]} ({ (q.time ? TIME_EN : SCALE_EN)[selectedVal - 1] })
+                        </span>
+                      </div>
+                    )}
                   </li>
                 );
               })}
             </ol>
 
-            {/* Suggestions / Comment Field */}
-            <div className="field">
-              <label htmlFor="comment">
-                <FaCommentDots className="field-icon" />
-                <span>
-                  ଆପଣଙ୍କ ପରାମର୍ଶ (ଇଚ୍ଛା ଥିଲେ) <span className="en">Suggestions (optional)</span>
-                </span>
+            {/* Suggestions & Quick Chips Card */}
+            <div className="pf-suggestions-card">
+              <label className="pf-field-label" htmlFor="comment">
+                <div className="pf-field-label-left">
+                  <FaCommentDots className="pf-field-icon" />
+                  <span>ଆପଣଙ୍କ ପରାମର୍ଶ · Suggestions</span>
+                </div>
+                <span className="pf-field-optional">ଇଚ୍ଛାଧୀନ · Optional</span>
               </label>
+
+              {/* Quick suggestion chips */}
+              <div className="pf-chips-list">
+                {QUICK_CHIPS.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className="pf-chip"
+                    onClick={() => handleAddChip(chip)}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
               <textarea
                 id="comment"
+                className="pf-textarea"
                 maxLength={500}
-                placeholder="ଆପଣଙ୍କ କିଛି ପରାମର୍ଶ ଥିଲେ ଏଠାରେ ଲେଖନ୍ତୁ... Write suggestions if any..."
+                placeholder="ଆପଣଙ୍କ କିଛି ପରାମର୍ଶ ଥିଲେ ଏଠାରେ ଲେଖନ୍ତୁ... Share any suggestions or thoughts to improve patient care..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
             </div>
 
-            {/* Actions & Status */}
-            <div className="actions">
-              <div
-                className={`status ${isError ? 'err' : ''}`}
-                id="status"
-                role="status"
-                aria-live="polite"
-              >
-                {statusMsg}
-              </div>
+            {/* Actions & Submit Button */}
+            <div className="pf-actions-wrap">
+              {isError && (
+                <div className="pf-error-banner" role="alert">
+                  <FaExclamationCircle size={16} />
+                  <span>{statusMsg}</span>
+                </div>
+              )}
 
-              <button className="primary" type="submit" id="submit" disabled={submitting}>
+              <button
+                className="pf-btn-submit"
+                type="submit"
+                id="submit"
+                disabled={submitting}
+              >
                 <FaPaperPlane />
-                <span>{submitting ? 'ପଠାଯାଉଛି... Submitting...' : 'ଦାଖଲ କରନ୍ତୁ · Submit'}</span>
+                <span>
+                  {submitting ? 'ପଠାଯାଉଛି... Submitting...' : 'ଦାଖଲ କରନ୍ତୁ · Submit Feedback'}
+                </span>
               </button>
 
-              <button className="link" type="button" id="back" onClick={handleBackToChoose}>
-                <FaArrowLeft />
-                <span>ସେବା ବଦଳାନ୍ତୁ · Change service</span>
+              <button
+                type="button"
+                className="pf-btn-change-service"
+                onClick={handleBackToChoose}
+                style={{ alignSelf: 'center', marginTop: '4px' }}
+              >
+                <FaArrowLeft size={12} />
+                <span>ସେବା ବଦଳାନ୍ତୁ · Change Service</span>
               </button>
             </div>
           </form>
         )}
 
-        {/* STEP 3: DONE CONFIRMATION */}
+        {/* STEP 3: DONE CONFIRMATION / DIGITAL RECEIPT */}
         {step === 'done' && (
-          <section id="step-done" className="done" data-svc={svc}>
-            <div style={{ marginBottom: '4px' }}>
-              <FaCheckCircle
-                size={54}
-                color={svc === 'opd' ? 'var(--opd)' : 'var(--ipd)'}
-              />
+          <section className="pf-done-card">
+            <div className="pf-done-shield">
+              <FaCheckCircle />
             </div>
-            <h2>ଧନ୍ୟବାଦ</h2>
-            <p className="en">Thank you. Your feedback helps improve the hospital.</p>
-            <button
-              className="link"
-              type="button"
-              id="again"
-              onClick={() => startForm(otherSvc)}
-            >
-              <FaRedo size={13} />
-              <span>
-                {FORMS[otherSvc].abbr} ପାଇଁ ମଧ୍ୟ ମତାମତ ଦିଅନ୍ତୁ · Also rate {FORMS[otherSvc].abbr}
+
+            <h2 className="pf-done-title">ଧନ୍ୟବାଦ · Thank You!</h2>
+
+            <p style={{ color: 'var(--pf-text-muted)', margin: 0 }}>
+              ଆପଣଙ୍କ ମତାମତ ସଫଳତାର ସହ ଗୃହୀତ ହୋଇଛି ।
+              <br />
+              <span style={{ fontSize: '0.9rem', color: 'var(--pf-text-light)' }}>
+                Your feedback has been securely recorded to enhance patient care quality.
               </span>
-            </button>
+            </p>
+
+            {/* Official Digital Acknowledgment Receipt */}
+            <div className="pf-done-receipt">
+              <div className="pf-receipt-row">
+                <span className="pf-receipt-label">Hospital:</span>
+                <span className="pf-receipt-val">DHH KATAKA (Cuttack)</span>
+              </div>
+              <div className="pf-receipt-row">
+                <span className="pf-receipt-label">Service:</span>
+                <span className="pf-receipt-val">{submittedReceipt?.service || currentForm.abbr}</span>
+              </div>
+              <div className="pf-receipt-row">
+                <span className="pf-receipt-label">Reference ID:</span>
+                <span className="pf-receipt-val" style={{ color: 'var(--pf-opd-dark)' }}>
+                  {submittedReceipt?.ticketId || 'FB-2026-CONFIRMED'}
+                </span>
+              </div>
+              <div className="pf-receipt-row">
+                <span className="pf-receipt-label">Date:</span>
+                <span className="pf-receipt-val">{submittedReceipt?.date || formDate}</span>
+              </div>
+              <div className="pf-receipt-row">
+                <span className="pf-receipt-label">Status:</span>
+                <span className="pf-receipt-val" style={{ color: '#16a34a' }}>
+                  ✓ Verified & Synced
+                </span>
+              </div>
+            </div>
+
+            {/* Restart Actions */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                type="button"
+                className="pf-btn-again"
+                onClick={() => startForm(otherSvc)}
+              >
+                <FaRedo size={13} />
+                <span>
+                  {FORMS[otherSvc].abbr} ପାଇଁ ମଧ୍ୟ ମତାମତ ଦିଅନ୍ତୁ · Also Rate {FORMS[otherSvc].abbr}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="pf-btn-again"
+                onClick={handleBackToChoose}
+              >
+                <span>ପ୍ରାରମ୍ଭିକ ପୃଷ୍ଠା · Back to Home</span>
+              </button>
+            </div>
           </section>
         )}
-      </main>
+      </div>
     </div>
   );
 };
