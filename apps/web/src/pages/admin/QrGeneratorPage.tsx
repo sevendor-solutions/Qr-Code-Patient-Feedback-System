@@ -31,7 +31,6 @@ export const QrGeneratorPage: React.FC = () => {
   // Form State
   const [selectedHospital, setSelectedHospital] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
-  const [serviceType, setServiceType] = useState<'BOTH' | 'OPD' | 'IPD'>('BOTH');
   const [selectedLoc, setSelectedLoc] = useState('');
   const [counterName, setCounterName] = useState('');
   const [copied, setCopied] = useState(false);
@@ -125,44 +124,7 @@ export const QrGeneratorPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Service Mode Selector */}
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-bold small d-block">QR Code Mode</Form.Label>
-                  <div className="btn-group w-100" role="group">
-                    <button
-                      type="button"
-                      className={`btn ${serviceType === 'BOTH' ? 'btn-primary text-white fw-bold' : 'btn-outline-primary'}`}
-                      onClick={() => setServiceType('BOTH')}
-                    >
-                      🌟 <strong>ONE QR for Both (OPD + IPD)</strong>
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${serviceType === 'OPD' ? 'btn-teal text-white fw-bold' : 'btn-outline-secondary'}`}
-                      style={{ backgroundColor: serviceType === 'OPD' ? '#0f766e' : undefined }}
-                      onClick={() => {
-                        setServiceType('OPD');
-                        const opdDept = departments.find((d: any) => d.code === 'OPD');
-                        if (opdDept) setSelectedDept(opdDept.id);
-                      }}
-                    >
-                      OPD Only (10 Qs)
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${serviceType === 'IPD' ? 'btn-indigo text-white fw-bold' : 'btn-outline-secondary'}`}
-                      style={{ backgroundColor: serviceType === 'IPD' ? '#4338ca' : undefined }}
-                      onClick={() => {
-                        setServiceType('IPD');
-                        const ipdDept = departments.find((d: any) => d.code === 'IPD');
-                        if (ipdDept) setSelectedDept(ipdDept.id);
-                      }}
-                    >
-                      IPD Only (20 Qs)
-                    </button>
-                  </div>
-                </Form.Group>
-
+                {/* Hospital Selection */}
                 <Form.Group className="mb-3">
                   <Form.Label className="fw-bold small">Hospital</Form.Label>
                   <Form.Select
@@ -201,11 +163,7 @@ export const QrGeneratorPage: React.FC = () => {
                     value={selectedLoc}
                     onChange={(e) => setSelectedLoc(e.target.value)}
                   >
-                    <option value="">
-                      {serviceType === 'BOTH'
-                        ? '-- Main Hospital Standee (OPD & IPD) --'
-                        : `-- Main Standee (${serviceType}) --`}
-                    </option>
+                    <option value="">-- Main Hospital Standee (OPD & IPD) --</option>
                     {locations
                       .filter((l: any) => !selectedDept || l.departmentId === selectedDept)
                       .map((loc: any) => (
@@ -220,24 +178,20 @@ export const QrGeneratorPage: React.FC = () => {
                   <Form.Label className="fw-semibold small">Counter Label / Notes</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder={
-                      serviceType === 'BOTH'
-                        ? 'e.g. DHH Kataka - Main Entrance / Reception Standee'
-                        : serviceType === 'OPD'
-                        ? 'e.g. OPD Registration Desk / Room 4'
-                        : 'e.g. Female Medical Ward - Bedside Standee'
-                    }
+                    placeholder="e.g. DHH Kataka - Main Entrance / Reception Standee"
                     value={counterName}
                     onChange={(e) => setCounterName(e.target.value)}
                   />
                   {/* Quick suggestion tags */}
                   <div className="d-flex flex-wrap gap-1 mt-2">
-                    {(serviceType === 'BOTH'
-                      ? ['Main Entrance Standee', 'Reception & Helpdesk', 'Central Waiting Hall', 'Registration & Cash Counter', 'Central Pharmacy Area', 'Diagnostic & Lab Wing']
-                      : serviceType === 'OPD'
-                      ? ['Registration Desk', 'Consultation Chamber', 'Niramaya Pharmacy', 'Lab / X-Ray', 'Waiting Hall']
-                      : ['General Ward', 'Female Ward', 'Maternity Ward', 'Pediatric Ward', 'ICU', 'Special Cabin']
-                    ).map((tag) => (
+                    {[
+                      'Main Entrance Standee',
+                      'Reception & Helpdesk',
+                      'Central Waiting Hall',
+                      'Registration & Cash Counter',
+                      'Central Pharmacy Area',
+                      'Diagnostic & Lab Wing',
+                    ].map((tag) => (
                       <span
                         key={tag}
                         className="badge bg-light text-dark border cursor-pointer"
@@ -261,9 +215,7 @@ export const QrGeneratorPage: React.FC = () => {
                   ) : (
                     <FaQrcode className="me-2" />
                   )}
-                  {serviceType === 'BOTH'
-                    ? 'Generate ONE QR Code for Both (OPD & IPD)'
-                    : `Generate Secure ${serviceType} QR Code`}
+                  Generate Patient Feedback QR Code (OPD & IPD)
                 </Button>
               </Form>
 
@@ -291,11 +243,7 @@ export const QrGeneratorPage: React.FC = () => {
                       <div className="fw-bold fs-6">DHH KATAKA</div>
                       <div style={{ fontSize: '0.72rem' }}>District Head Hospital · କଟକ</div>
                       <div className="badge bg-warning text-dark mt-1" style={{ fontSize: '0.72rem' }}>
-                        {serviceType === 'BOTH'
-                          ? '🌟 ONE QR · OPD (10 Qs) & IPD (20 Qs)'
-                          : serviceType === 'OPD'
-                          ? 'OPD (ବହିଃ-ବିଭାଗ 10 Qs)'
-                          : 'IPD (ଅନ୍ତଃ-ବିଭାଗ 20 Qs)'}
+                        ONE QR · OPD (10 Qs) & IPD (20 Qs)
                       </div>
                     </div>
 
@@ -307,17 +255,10 @@ export const QrGeneratorPage: React.FC = () => {
                     />
 
                     <div className="small fw-bold text-dark mt-2">
-                      {counterName ||
-                        (serviceType === 'BOTH'
-                          ? 'Hospital Main Standee (OPD + IPD)'
-                          : serviceType === 'OPD'
-                          ? 'OPD Main Counter'
-                          : 'Inpatient Ward')}
+                      {counterName || 'Hospital Main Standee (OPD + IPD)'}
                     </div>
                     <div className="text-muted" style={{ fontSize: '0.75rem' }}>
-                      {serviceType === 'BOTH'
-                        ? 'Scan to choose OPD or IPD on your phone'
-                        : 'Scan using any smartphone camera'}
+                      Scan to choose OPD or IPD on your phone
                     </div>
                     <div className="text-primary fw-semibold mt-1" style={{ fontSize: '0.72rem' }}>
                       ଆପଣଙ୍କ ମତାମତ ଦେବା ପାଇଁ ସ୍କାନ୍ କରନ୍ତୁ
@@ -347,7 +288,7 @@ export const QrGeneratorPage: React.FC = () => {
                     </Button>
                     <a
                       href={generatedResult.qrDataUrl}
-                      download={`DHH-KATAKA-${serviceType}-${generatedResult.code}.png`}
+                      download={`DHH-KATAKA-PATIENT-FEEDBACK-QR-${generatedResult.code}.png`}
                       className="btn btn-primary btn-sm"
                     >
                       <FaDownload className="me-1" /> Download PNG
@@ -365,7 +306,7 @@ export const QrGeneratorPage: React.FC = () => {
               ) : (
                 <div className="py-5 text-muted">
                   <FaQrcode size={64} className="opacity-25 mb-3" />
-                  <p className="mb-0">Click "Generate ONE QR Code for Both (OPD & IPD)" to preview your hospital standee.</p>
+                  <p className="mb-0">Click "Generate Patient Feedback QR Code" to preview your hospital standee.</p>
                 </div>
               )}
             </Card.Body>
